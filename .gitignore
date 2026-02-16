@@ -1,2 +1,4 @@
 # Data files
-data/*
+data/metadata/*
+data/processed/*
+data/raw/*
