@@ -2,3 +2,6 @@
 data/metadata/*
 data/processed/*
 data/raw/*
+
+# Environment settings
+*.env
