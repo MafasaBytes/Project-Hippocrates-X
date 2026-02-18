@@ -1,0 +1,9 @@
+# Data exploration
+
+data:
+  raw:
+    CheXpert: 
+      root_path: "/mnt/c/Users/Masia/OneDrive/Desktop/Project-Hippocrates-X/data/raw/CheXpert"
+      img_data: "${.root_path}/train"
+      csv_path:  "${.root_path}/train.csv"
+      batch_size: 32
