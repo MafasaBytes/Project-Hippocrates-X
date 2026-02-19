@@ -13,24 +13,7 @@ import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from utils.chexpert_abs_path import resolve_chexpert_path
-
-def _normalize_path_for_platform(p: str) -> str:
-    """
-    Normalize config paths across Windows / WSL.
-
-    - On Windows (`os.name == 'nt'`), convert WSL-style `/mnt/c/...` to `C:/...`.
-    - On Linux/WSL, keep `/mnt/c/...` unchanged.
-    """
-    if not isinstance(p, str):
-        return p
-
-    if os.name == "nt" and p.startswith("/mnt/") and len(p) > 6 and p[5].isalpha() and p[6] == "/":
-        drive = p[5].upper()
-        rest = p[7:]
-        return f"{drive}:/{rest}"
-
-    return p
+from utils.chexpert_abs_path import resolve_chexpert_path, _normalize_path_for_platform
 
 class CheXpertParquetDataset(Dataset):
     def __init__(

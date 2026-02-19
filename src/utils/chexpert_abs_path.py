@@ -1,10 +1,7 @@
 from pathlib import Path
+import os
 
-def resolve_chexpert_path(
-    rel_path: str,
-    root_path: Path,
-    img_data: Path,
-) -> Path:
+def resolve_chexpert_path(rel_path: str, root_path: Path, img_data: Path) -> Path:
     """
     rel_path examples:
       CheXpert-v1.0-small/train/patient00001/study1/view1_frontal.jpg
@@ -38,4 +35,21 @@ def resolve_chexpert_path(
 
     # If nothing matches, return the “most likely” default for error reporting
     return root_path / s0
+
+def _normalize_path_for_platform(p: str) -> str:
+    """
+    Normalize config paths across Windows / WSL.
+
+    - On Windows (`os.name == 'nt'`), convert WSL-style `/mnt/c/...` to `C:/...`.
+    - On Linux/WSL, keep `/mnt/c/...` unchanged.
+    """
+    if not isinstance(p, str):
+        return p
+
+    if os.name == "nt" and p.startswith("/mnt/") and len(p) > 6 and p[5].isalpha() and p[6] == "/":
+        drive = p[5].upper()
+        rest = p[7:]
+        return f"{drive}:/{rest}"
+
+    return p
 
