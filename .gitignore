@@ -5,3 +5,6 @@ data/raw/*
 
 # Environment settings
 *.env
+
+# PyCache files
+__pycache__/
