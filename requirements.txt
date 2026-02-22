@@ -1,0 +1,28 @@
+# Core framework
+fastapi[standard]
+uvicorn[standard]
+python-multipart
+websockets
+
+# Database
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pgvector
+
+# ML / HuggingFace
+torch
+transformers
+accelerate
+safetensors
+Pillow
+soundfile
+librosa
+
+# Configuration
+pydantic-settings
+python-dotenv
+
+# Utilities
+numpy
+aiofiles

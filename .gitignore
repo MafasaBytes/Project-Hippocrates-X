@@ -2,9 +2,21 @@
 data/metadata/*
 data/processed/*
 data/raw/*
+data/uploads/*
 
 # Environment settings
 *.env
 
 # PyCache files
 __pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Model cache
+models_cache/
+
+# Alembic
+alembic/versions/__pycache__/
