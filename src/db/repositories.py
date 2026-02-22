@@ -54,6 +54,20 @@ async def get_patient(session: AsyncSession, patient_id: uuid.UUID) -> Patient |
     return await session.get(Patient, patient_id)
 
 
+async def search_patients(session: AsyncSession, query: str, *, limit: int = 20) -> list[Patient]:
+    pattern = f"%{query}%"
+    stmt = (
+        select(Patient)
+        .where(
+            Patient.name.ilike(pattern) | Patient.medical_record_number.ilike(pattern)
+        )
+        .order_by(Patient.name)
+        .limit(limit)
+    )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
 # ── Consultation ──
 
 

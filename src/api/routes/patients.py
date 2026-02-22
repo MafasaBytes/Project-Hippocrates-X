@@ -1,10 +1,10 @@
-"""Patient CRUD endpoints."""
+"""Patient CRUD + search endpoints."""
 
 from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_db
@@ -12,6 +12,17 @@ from src.api.schemas import PatientCreate, PatientOut
 from src.db import repositories as repo
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
+
+
+@router.get("", response_model=list[PatientOut])
+async def search_patients(
+    q: str = Query("", min_length=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    if not q:
+        return []
+    return await repo.search_patients(db, q, limit=limit)
 
 
 @router.post("", response_model=PatientOut, status_code=201)
