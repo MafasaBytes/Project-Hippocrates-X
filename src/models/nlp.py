@@ -38,6 +38,16 @@ class ClinicalNLP:
         self._model.eval()
 
     @property
+    def is_loaded(self) -> bool:
+        return self._model is not None
+
+    def unload(self) -> None:
+        self._model = None
+        self._tokenizer = None
+        if self._device == "cuda":
+            torch.cuda.empty_cache()
+
+    @property
     def model(self) -> AutoModel:
         if self._model is None:
             self.load()

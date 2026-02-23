@@ -51,6 +51,17 @@ class AudioTranscriber:
         )
 
     @property
+    def is_loaded(self) -> bool:
+        return self._model is not None
+
+    def unload(self) -> None:
+        self._model = None
+        self._processor = None
+        self._pipe = None
+        if self._device == "cuda":
+            torch.cuda.empty_cache()
+
+    @property
     def pipe(self):
         if self._pipe is None:
             self.load()

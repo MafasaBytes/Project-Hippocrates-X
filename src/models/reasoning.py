@@ -76,6 +76,16 @@ class ReasoningEngine:
             self._model = self._model.to(self._device)
 
     @property
+    def is_loaded(self) -> bool:
+        return self._model is not None
+
+    def unload(self) -> None:
+        self._model = None
+        self._tokenizer = None
+        if self._device == "cuda":
+            torch.cuda.empty_cache()
+
+    @property
     def model(self) -> AutoModelForCausalLM:
         if self._model is None:
             self.load()

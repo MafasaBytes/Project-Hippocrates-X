@@ -21,6 +21,12 @@ class ConsultationService:
     def __init__(self, fusion: FusionOrchestrator):
         self._fusion = fusion
 
+    # Maps consultation type -> modalities likely needed.
+    _HINT_MAP: dict[ConsultationType, list[str]] = {
+        ConsultationType.FACE_TO_FACE: ["nlp", "reasoning", "vision"],
+        ConsultationType.PHONE_CALL: ["nlp", "reasoning", "audio"],
+    }
+
     async def start(
         self,
         session: AsyncSession,
@@ -35,6 +41,10 @@ class ConsultationService:
             patient_id=patient_id,
             consultation_type=consultation_type,
         )
+
+        hints = self._HINT_MAP.get(consultation_type, ["nlp", "reasoning"])
+        self._fusion.hint(hints)
+
         return {
             "consultation_id": str(consultation.id),
             "status": consultation.status.value,

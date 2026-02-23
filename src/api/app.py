@@ -13,6 +13,7 @@ except Exception:
 
 import logging
 import threading
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -26,15 +27,17 @@ from src.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Absolute path to the compiled React app (present in Docker, absent in dev)
 _FRONTEND_DIST = Path(__file__).resolve().parents[2] / "app" / "dist"
+
+_CLEANUP_INTERVAL = 60  # seconds between idle-model sweeps
+_cleanup_stop = threading.Event()
 
 
 def _warmup_models() -> None:
-    """Pre-load the most commonly used ML models in a background thread.
+    """Pre-load only the lightweight NLP model at startup.
 
-    Accesses the lazy properties on the FusionOrchestrator singleton so the
-    first real user request doesn't pay the multi-minute model-loading cost.
+    Heavier models (reasoning, vision, audio) are loaded on-demand via
+    consultation-type hints or lazy property access.
     """
     from src.api.deps import get_fusion
 
@@ -46,12 +49,20 @@ def _warmup_models() -> None:
     except Exception:
         logger.exception("NLP warm-up failed — will retry on first request")
 
-    try:
-        logger.info("Warming up reasoning model (OpenBioLLM)…")
-        _ = fusion.reasoning
-        logger.info("Reasoning model ready.")
-    except Exception:
-        logger.exception("Reasoning warm-up failed — will retry on first request")
+
+def _idle_cleanup_loop() -> None:
+    """Periodically unload models that have exceeded their idle TTL."""
+    from src.api.deps import get_fusion
+
+    fusion = get_fusion()
+    while not _cleanup_stop.is_set():
+        _cleanup_stop.wait(_CLEANUP_INTERVAL)
+        if _cleanup_stop.is_set():
+            break
+        try:
+            fusion.cleanup_idle()
+        except Exception:
+            logger.exception("Error during idle model cleanup")
 
 
 @asynccontextmanager
@@ -61,7 +72,12 @@ async def lifespan(app: FastAPI):
     warmup_thread = threading.Thread(target=_warmup_models, daemon=True)
     warmup_thread.start()
 
+    cleanup_thread = threading.Thread(target=_idle_cleanup_loop, daemon=True)
+    cleanup_thread.start()
+
     yield
+
+    _cleanup_stop.set()
 
 
 def create_app() -> FastAPI:
@@ -77,9 +93,6 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # In development the Vite dev server handles CORS; in production the
-    # frontend is served from the same origin so CORS is only needed for
-    # external clients or the Vite proxy during local dev.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
@@ -103,10 +116,19 @@ def create_app() -> FastAPI:
     async def health():
         return {"status": "ok", "project": "Hippocrates X"}
 
-    # ── Production static file serving ────────────────────────────────────────
-    # When the Docker image is built, the React app is compiled into app/dist/.
-    # We mount the assets folder and add a catch-all that serves index.html for
-    # any unknown path so React Router handles client-side navigation.
+    @app.get("/health/models")
+    async def health_models():
+        from src.api.deps import get_fusion
+
+        fusion = get_fusion()
+        models = fusion.model_status()
+        total_mb = sum(m["approx_memory_mb"] for m in models)
+        return {
+            "models": models,
+            "total_loaded_memory_mb": round(total_mb, 1),
+        }
+
+    # -- Production static file serving --
     if _FRONTEND_DIST.is_dir():
         app.mount(
             "/assets",
