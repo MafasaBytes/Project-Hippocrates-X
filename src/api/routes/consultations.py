@@ -18,11 +18,38 @@ from src.api.schemas import (
     TextInputCreate,
 )
 from src.db import repositories as repo
-from src.db.models import InputType
+from src.db.models import Consultation, ConsultationStatus, InputType
 from src.services.consultation import ConsultationService
 from src.utils.file_handlers import classify_file, save_upload
 
 router = APIRouter(prefix="/api/consultations", tags=["consultations"])
+
+
+def _consultation_to_detail(c: Consultation, *, include_inputs: bool = False) -> ConsultationDetail:
+    """Build ConsultationDetail from ORM. Set include_inputs=True only when inputs are loaded."""
+    inputs = (
+        [
+            InputOut(
+                input_id=str(i.id),
+                type=i.input_type.value,
+                created_at=i.created_at.isoformat(),
+            )
+            for i in c.inputs
+        ]
+        if include_inputs
+        else []
+    )
+    return ConsultationDetail(
+        id=c.id,
+        doctor_id=c.doctor_id,
+        patient_id=c.patient_id,
+        consultation_type=c.consultation_type.value,
+        status=c.status.value,
+        started_at=c.started_at,
+        ended_at=c.ended_at,
+        summary=c.summary,
+        inputs=inputs,
+    )
 
 
 @router.post("", response_model=ConsultationOut, status_code=201)
@@ -54,7 +81,7 @@ async def get_consultation(
     consultation = await repo.get_consultation(db, consultation_id)
     if not consultation:
         raise HTTPException(404, "Consultation not found")
-    return consultation
+    return _consultation_to_detail(consultation, include_inputs=True)
 
 
 @router.get("", response_model=list[ConsultationDetail])
@@ -66,9 +93,16 @@ async def list_consultations(
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
 ):
-    return await repo.list_consultations(
-        db, doctor_id=doctor_id, patient_id=patient_id, status=status, limit=limit, offset=offset
+    status_enum = None
+    if status:
+        try:
+            status_enum = ConsultationStatus(status)
+        except ValueError:
+            raise HTTPException(422, f"Invalid status: {status!r}")
+    consultations = await repo.list_consultations(
+        db, doctor_id=doctor_id, patient_id=patient_id, status=status_enum, limit=limit, offset=offset
     )
+    return [_consultation_to_detail(c, include_inputs=False) for c in consultations]
 
 
 @router.patch("/{consultation_id}", response_model=ConsultationEndOut)

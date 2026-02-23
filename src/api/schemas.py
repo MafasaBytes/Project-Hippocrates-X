@@ -98,8 +98,7 @@ class ConsultationDetail(BaseModel):
     started_at: datetime
     ended_at: datetime | None
     summary: str | None
-
-    model_config = {"from_attributes": True}
+    inputs: list[InputOut] = Field(default_factory=list)
 
 
 # ── Inputs ──
