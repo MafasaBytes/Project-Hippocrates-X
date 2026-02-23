@@ -2,6 +2,9 @@ import { api } from "./client";
 import type { Doctor, DoctorCreate } from "../types/api";
 
 export const doctorsApi = {
+  list: (params?: { limit?: number; offset?: number }) =>
+    api.get<Doctor[]>("/api/doctors", { params }).then((r) => r.data),
+
   create: (data: DoctorCreate) =>
     api.post<Doctor>("/api/doctors", data).then((r) => r.data),
 
