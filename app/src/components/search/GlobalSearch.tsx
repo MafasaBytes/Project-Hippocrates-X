@@ -14,6 +14,7 @@ import { IconSearch } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { searchApi } from "../../api/search";
 import { ConfidenceBadge } from "../consultation/ConfidenceBadge";
+import { EmptyState } from "../shared/EmptyState";
 import type { SearchResult, AnalysisSearchResult } from "../../types/api";
 import dayjs from "dayjs";
 
@@ -50,6 +51,7 @@ export function GlobalSearch({ initialQuery = "" }: Props) {
     <Stack gap="md">
       <Group gap="sm" align="end">
         <TextInput
+          aria-label="Search consultations and analyses"
           placeholder="Search consultations and analyses..."
           leftSection={<IconSearch size={16} />}
           value={query}
@@ -59,6 +61,7 @@ export function GlobalSearch({ initialQuery = "" }: Props) {
           size="md"
         />
         <SegmentedControl
+          aria-label="Search mode: full-text or semantic"
           data={[
             { label: "Full-text", value: "fulltext" },
             { label: "Semantic", value: "semantic" },
@@ -67,7 +70,7 @@ export function GlobalSearch({ initialQuery = "" }: Props) {
           onChange={(v) => setMode(v as "fulltext" | "semantic")}
           size="md"
         />
-        <Button onClick={handleSearch} loading={isLoading} size="md">
+        <Button onClick={handleSearch} loading={isLoading} size="md" aria-label="Run search">
           Search
         </Button>
       </Group>
@@ -80,10 +83,20 @@ export function GlobalSearch({ initialQuery = "" }: Props) {
           {ftResults.map((r) => (
             <Card
               key={r.consultation_id}
+              component="div"
               withBorder
               padding="sm"
+              tabIndex={0}
+              role="button"
               onClick={() => navigate(`/consultations/${r.consultation_id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/consultations/${r.consultation_id}`);
+                }
+              }}
               style={{ cursor: "pointer" }}
+              aria-label={`Consultation ${r.consultation_id.slice(0, 8)}, ${dayjs(r.started_at).format("MMM D, YYYY")}`}
             >
               <Group justify="space-between" mb={4}>
                 <Text size="sm" fw={500} ff="var(--mantine-font-family-monospace)">
@@ -111,10 +124,20 @@ export function GlobalSearch({ initialQuery = "" }: Props) {
           {semResults.map((r, i) => (
             <Card
               key={r.analysis_id}
+              component="div"
               withBorder
               padding="sm"
+              tabIndex={0}
+              role="button"
               onClick={() => navigate(`/consultations/${r.consultation_id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/consultations/${r.consultation_id}`);
+                }
+              }}
               style={{ cursor: "pointer" }}
+              aria-label={`Analysis result ${i + 1}, consultation ${r.consultation_id.slice(0, 8)}`}
             >
               <Group justify="space-between" mb={4}>
                 <Group gap="xs">
@@ -138,10 +161,12 @@ export function GlobalSearch({ initialQuery = "" }: Props) {
         </Stack>
       )}
 
-      {!isLoading && ftResults.length === 0 && semResults.length === 0 && query && (
-        <Text size="sm" c="dimmed" ta="center" py="xl">
-          No results found
-        </Text>
+      {!isLoading && ftResults.length === 0 && semResults.length === 0 && query.trim() && (
+        <EmptyState
+          title="No results found"
+          description={`No consultations or analyses matched "${query.trim()}". Try different keywords or search mode.`}
+          icon="search"
+        />
       )}
     </Stack>
   );

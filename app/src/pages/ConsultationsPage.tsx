@@ -7,11 +7,16 @@ import {
   Group,
   Select,
   Card,
+  Button,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { consultationsApi } from "../api/consultations";
+import { EmptyState } from "../components/shared/EmptyState";
+import { LoadingConsultationList } from "../components/shared/LoadingSkeleton";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const STATUS_COLOR: Record<string, string> = {
   active: "blue",
@@ -20,10 +25,11 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export function ConsultationsPage() {
+  useDocumentTitle("Consultations");
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  const { data: consultations = [] } = useQuery({
+  const { data: consultations = [], isLoading } = useQuery({
     queryKey: ["consultations", statusFilter],
     queryFn: () =>
       consultationsApi.list({
@@ -32,11 +38,75 @@ export function ConsultationsPage() {
       }),
   });
 
+  if (isLoading) {
+    return (
+      <>
+        <Group justify="space-between" mb="lg">
+          <Title order={1}>Consultations</Title>
+          <Select
+            aria-label="Filter consultations by status"
+            placeholder="Filter by status"
+            data={[
+              { value: "active", label: "Active" },
+              { value: "completed", label: "Completed" },
+              { value: "cancelled", label: "Cancelled" },
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+            w={180}
+            size="sm"
+          />
+        </Group>
+        <LoadingConsultationList />
+      </>
+    );
+  }
+
+  if (consultations.length === 0) {
+    return (
+      <>
+        <Group justify="space-between" mb="lg">
+          <Title order={1}>Consultations</Title>
+          <Select
+            aria-label="Filter consultations by status"
+            placeholder="Filter by status"
+            data={[
+              { value: "active", label: "Active" },
+              { value: "completed", label: "Completed" },
+              { value: "cancelled", label: "Cancelled" },
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            clearable
+            w={180}
+            size="sm"
+          />
+        </Group>
+        <EmptyState
+          title="No consultations found"
+          description={
+            statusFilter
+              ? "Try changing the status filter or start a new consultation."
+              : "Start a consultation from the sidebar to get started."
+          }
+          icon="database"
+          action={
+            <Button component={Link} to="/" variant="light">
+              Go to Dashboard
+            </Button>
+          }
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Group justify="space-between" mb="lg">
-        <Title order={2}>Consultations</Title>
+        <Title order={1}>Consultations</Title>
         <Select
+          aria-label="Filter consultations by status"
           placeholder="Filter by status"
           data={[
             { value: "active", label: "Active" },
@@ -63,20 +133,20 @@ export function ConsultationsPage() {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {consultations.length === 0 && (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
-                  <Text size="sm" c="dimmed" ta="center" py="xl">
-                    No consultations found
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            )}
             {consultations.map((c) => (
               <Table.Tr
                 key={c.id}
+                tabIndex={0}
+                role="button"
                 onClick={() => navigate(`/consultations/${c.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/consultations/${c.id}`);
+                  }
+                }}
                 style={{ cursor: "pointer" }}
+                aria-label={`View consultation ${c.id.slice(0, 8)}, ${c.status}`}
               >
                 <Table.Td>
                   <Text size="sm" ff="var(--mantine-font-family-monospace)">

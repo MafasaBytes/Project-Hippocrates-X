@@ -80,6 +80,5 @@ export const theme = createTheme({
     focusRingWidth: 2,
   },
   // Override Mantine defaults for better accessibility
-  focusRing: "outline",
-  focusRingRadius: "sm",
+  focusRing: "always",
 });

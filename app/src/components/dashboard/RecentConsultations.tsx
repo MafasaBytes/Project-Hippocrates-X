@@ -43,8 +43,17 @@ export function RecentConsultations({ consultations }: Props) {
           {consultations.map((c) => (
             <Table.Tr
               key={c.id}
+              tabIndex={0}
+              role="button"
               onClick={() => navigate(`/consultations/${c.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/consultations/${c.id}`);
+                }
+              }}
               style={{ cursor: "pointer" }}
+              aria-label={`View consultation ${c.id.slice(0, 8)}, ${c.status}`}
             >
               <Table.Td>
                 <Text size="sm" ff="var(--mantine-font-family-monospace)">

@@ -65,6 +65,30 @@ export function AppLayout() {
 
   return (
     <>
+      <a
+        href="#main-content"
+        className="skip-link"
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          zIndex: 9999,
+          padding: "0.75rem 1rem",
+          background: "var(--mantine-color-indigo-6)",
+          color: "white",
+          fontWeight: 600,
+          borderRadius: "var(--mantine-radius-sm)",
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.left = "0.5rem";
+          e.currentTarget.style.top = "0.5rem";
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.left = "-9999px";
+          e.currentTarget.style.top = "";
+        }}
+      >
+        Skip to main content
+      </a>
       <AppShell
         header={{ height: 56 }}
         navbar={{ width: 240, breakpoint: "sm", collapsed: { mobile: !mobileOpened } }}

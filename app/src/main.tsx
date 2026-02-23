@@ -12,6 +12,7 @@ import "@mantine/dropzone/styles.css";
 
 import { theme } from "./theme";
 import { App } from "./App";
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,7 +27,9 @@ createRoot(document.getElementById("root")!).render(
         <ModalsProvider>
           <Notifications position="top-right" />
           <BrowserRouter>
-            <App />
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
           </BrowserRouter>
         </ModalsProvider>
       </MantineProvider>

@@ -1,14 +1,16 @@
 import { useSearchParams } from "react-router-dom";
 import { Title } from "@mantine/core";
 import { GlobalSearch } from "../components/search/GlobalSearch";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export function SearchPage() {
+  useDocumentTitle("Search");
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
 
   return (
     <>
-      <Title order={2} mb="lg">
+      <Title order={1} mb="lg">
         Search
       </Title>
       <GlobalSearch initialQuery={initialQuery} />

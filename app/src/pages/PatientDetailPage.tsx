@@ -7,16 +7,18 @@ import {
   Tabs,
   Table,
   Badge,
-  Loader,
-  Center,
   Breadcrumbs,
   Anchor,
   Stack,
+  Button,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { patientsApi } from "../api/patients";
 import { consultationsApi } from "../api/consultations";
+import { EmptyState } from "../components/shared/EmptyState";
+import { LoadingCard } from "../components/shared/LoadingSkeleton";
 import dayjs from "dayjs";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const STATUS_COLOR: Record<string, string> = {
   active: "blue",
@@ -34,6 +36,8 @@ export function PatientDetailPage() {
     enabled: !!id,
   });
 
+  useDocumentTitle(patient?.name ?? "Patient");
+
   const { data: consultations = [] } = useQuery({
     queryKey: ["consultations", "patient", id],
     queryFn: () => consultationsApi.list({ patient_id: id }),
@@ -42,17 +46,24 @@ export function PatientDetailPage() {
 
   if (loadingPatient) {
     return (
-      <Center py="xl">
-        <Loader />
-      </Center>
+      <>
+        <LoadingCard />
+      </>
     );
   }
 
   if (!patient) {
     return (
-      <Text c="dimmed" ta="center" py="xl">
-        Patient not found
-      </Text>
+      <EmptyState
+        title="Patient not found"
+        description="This patient may have been removed or the link is invalid."
+        icon="error"
+        action={
+          <Button component={Link} to="/patients" variant="light">
+            Back to Patients
+          </Button>
+        }
+      />
     );
   }
 
@@ -65,7 +76,7 @@ export function PatientDetailPage() {
         <Text size="sm">{patient.name}</Text>
       </Breadcrumbs>
 
-      <Title order={2} mb="lg">
+      <Title order={1} mb="lg">
         {patient.name}
       </Title>
 
@@ -140,8 +151,17 @@ export function PatientDetailPage() {
                 {consultations.map((c) => (
                   <Table.Tr
                     key={c.id}
+                    tabIndex={0}
+                    role="button"
                     onClick={() => navigate(`/consultations/${c.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/consultations/${c.id}`);
+                      }
+                    }}
                     style={{ cursor: "pointer" }}
+                    aria-label={`View consultation ${c.id.slice(0, 8)}, ${c.status}`}
                   >
                     <Table.Td>
                       <Text

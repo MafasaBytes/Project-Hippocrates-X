@@ -59,7 +59,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
               </Text>
               {this.state.error && (
                 <Text size="sm" c="dimmed" style={{ maxWidth: "400px", textAlign: "center" }}>
-                  {this.state.error.message}
+                  {import.meta.env.PROD
+                    ? "An unexpected error occurred. Our team has been notified."
+                    : this.state.error.message}
                 </Text>
               )}
               <Text size="sm" c="dimmed" style={{ textAlign: "center" }}>
@@ -77,5 +79,3 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return this.props.children;
   }
 }
-
-ErrorBoundary.displayName = "ErrorBoundary";
