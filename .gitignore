@@ -21,3 +21,8 @@ models_cache/
 
 # Alembic
 alembic/versions/__pycache__/
+
+# Docs
+docs/*
+docs/.DS_Store
+docs/
