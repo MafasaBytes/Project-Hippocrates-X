@@ -25,6 +25,7 @@ alembic/versions/__pycache__/
 # Cursor
 .cursor/
 .claude/
+
 # Docs
 docs/*
 docs/.DS_Store

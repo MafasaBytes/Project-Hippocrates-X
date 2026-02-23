@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.routes import analysis, consultations, doctors, patients, search, transcription
 from src.config import settings
+
+# Absolute path to the compiled React app (present in Docker, absent in dev)
+_FRONTEND_DIST = Path(__file__).resolve().parents[2] / "app" / "dist"
 
 
 @asynccontextmanager
@@ -30,9 +36,16 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # In development the Vite dev server handles CORS; in production the
+    # frontend is served from the same origin so CORS is only needed for
+    # external clients or the Vite proxy during local dev.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_origins=[
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://127.0.0.1:5173",
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -48,6 +61,21 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health():
         return {"status": "ok", "project": "Hippocrates X"}
+
+    # ── Production static file serving ────────────────────────────────────────
+    # When the Docker image is built, the React app is compiled into app/dist/.
+    # We mount the assets folder and add a catch-all that serves index.html for
+    # any unknown path so React Router handles client-side navigation.
+    if _FRONTEND_DIST.is_dir():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=_FRONTEND_DIST / "assets"),
+            name="assets",
+        )
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def serve_spa(full_path: str):  # noqa: ARG001
+            return FileResponse(_FRONTEND_DIST / "index.html")
 
     return app
 

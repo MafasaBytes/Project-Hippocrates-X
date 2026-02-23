@@ -13,8 +13,10 @@ export function usePatientLookup(initialQuery = "") {
     error,
   } = useQuery({
     queryKey: ["patients", "search", debounced],
-    queryFn: () => patientsApi.search(debounced),
-    enabled: debounced.length >= 2,
+    queryFn: () =>
+      debounced.length >= 2
+        ? patientsApi.search(debounced)
+        : patientsApi.list(),
   });
 
   useEffect(() => {

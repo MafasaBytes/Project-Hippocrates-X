@@ -30,6 +30,13 @@ async def create_doctor(session: AsyncSession, *, name: str, specialization: str
 async def get_doctor(session: AsyncSession, doctor_id: uuid.UUID) -> Doctor | None:
     return await session.get(Doctor, doctor_id)
 
+
+async def list_doctors(session: AsyncSession, *, limit: int = 50, offset: int = 0) -> list[Doctor]:
+    stmt = select(Doctor).order_by(Doctor.name).limit(limit).offset(offset)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
 # Patient
 async def create_patient(
     session: AsyncSession,
@@ -47,6 +54,12 @@ async def create_patient(
 
 async def get_patient(session: AsyncSession, patient_id: uuid.UUID) -> Patient | None:
     return await session.get(Patient, patient_id)
+
+
+async def list_patients(session: AsyncSession, *, limit: int = 50, offset: int = 0) -> list[Patient]:
+    stmt = select(Patient).order_by(Patient.name).limit(limit).offset(offset)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
 
 
 async def search_patients(session: AsyncSession, query: str, *, limit: int = 20) -> list[Patient]:

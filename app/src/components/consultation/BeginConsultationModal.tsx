@@ -4,6 +4,7 @@ import {
   Modal,
   Stepper,
   TextInput,
+  Select,
   SegmentedControl,
   Textarea,
   Button,
@@ -16,10 +17,11 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconSearch, IconAlertCircle } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { usePatientLookup } from "../../hooks/usePatientLookup";
 import { consultationsApi } from "../../api/consultations";
 import { patientsApi } from "../../api/patients";
+import { doctorsApi } from "../../api/doctors";
 import type { Patient, ConsultationType } from "../../types/api";
 
 interface Props {
@@ -36,7 +38,16 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
   const [newPatientName, setNewPatientName] = useState("");
   const [newPatientMRN, setNewPatientMRN] = useState("");
 
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+
   const { searchValue, setSearchValue, patients, isLoading } = usePatientLookup();
+
+  const { data: doctors } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => doctorsApi.list(),
+    enabled: opened,
+  });
+
   const modalRef = useRef<HTMLDivElement>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,11 +80,10 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
     },
   });
 
-  // For the demo, we use a hardcoded doctor_id. In production this comes from auth.
   const startMutation = useMutation({
     mutationFn: () =>
       consultationsApi.create({
-        doctor_id: "00000000-0000-0000-0000-000000000001",
+        doctor_id: selectedDoctorId!,
         patient_id: selectedPatient!.id,
         consultation_type: consultType,
       }),
@@ -99,6 +109,7 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
   const resetState = () => {
     setStep(0);
     setSelectedPatient(null);
+    setSelectedDoctorId(null);
     setConsultType("face_to_face");
     setNotes("");
     setSearchValue("");
@@ -236,7 +247,7 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
             </Stack>
           </Stepper.Step>
 
-          <Stepper.Step label="Setup" description="Consultation type">
+          <Stepper.Step label="Setup" description="Doctor & type">
             <Stack gap="md" mt="md">
               {selectedPatient && (
                 <Card withBorder padding="sm">
@@ -245,6 +256,25 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
                   </Text>
                 </Card>
               )}
+
+              <Select
+                label="Attending Doctor"
+                placeholder="Select a doctor…"
+                data={
+                  doctors?.map((d) => ({
+                    value: d.id,
+                    label: d.specialization
+                      ? `${d.name} — ${d.specialization}`
+                      : d.name,
+                  })) ?? []
+                }
+                value={selectedDoctorId}
+                onChange={setSelectedDoctorId}
+                searchable
+                required
+                nothingFoundMessage="No doctors registered — go to Doctors page first"
+                aria-label="Select attending doctor"
+              />
 
               <div>
                 <Text size="sm" fw={500} mb={4}>
@@ -275,7 +305,7 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
                 fullWidth
                 onClick={() => startMutation.mutate()}
                 loading={startMutation.isPending}
-                disabled={!selectedPatient}
+                disabled={!selectedPatient || !selectedDoctorId}
                 aria-label="Start consultation session"
               >
                 Start Session
