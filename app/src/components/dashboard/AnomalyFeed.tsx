@@ -17,8 +17,14 @@ interface Props {
 
 export function AnomalyFeed({ anomalies }: Props) {
   return (
-    <Card withBorder padding="md" h="100%">
-      <Text fw={600} mb="sm">
+    <Card
+      padding="md"
+      radius="md"
+      bg="dark.7"
+      h="100%"
+      style={{ border: "1px solid var(--mantine-color-dark-5)" }}
+    >
+      <Text fw={600} size="sm" mb="sm">
         Anomaly Feed
       </Text>
       <ScrollArea h={360}>
@@ -29,9 +35,9 @@ export function AnomalyFeed({ anomalies }: Props) {
         )}
         <Stack gap="sm">
           {anomalies.map((a) => (
-            <Card key={a.id} withBorder padding="sm" bg="red.0">
+            <Card key={a.id} padding="sm" bg="dark.6" radius="sm">
               <Group gap="xs" mb={4} wrap="nowrap">
-                <ThemeIcon size="sm" variant="light" color="red">
+                <ThemeIcon size="sm" variant="light" color="alert">
                   <IconAlertTriangle size={14} />
                 </ThemeIcon>
                 <Text size="sm" fw={600} lineClamp={1}>
