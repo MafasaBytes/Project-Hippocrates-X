@@ -50,6 +50,7 @@ export interface ConsultationDetail {
   started_at: string;
   ended_at: string | null;
   summary: string | null;
+  inputs?: InputOut[];
 }
 
 export interface ConsultationEndRequest {

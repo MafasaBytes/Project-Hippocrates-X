@@ -33,6 +33,17 @@ async def get_doctor(session: AsyncSession, doctor_id: uuid.UUID) -> Doctor | No
     return await session.get(Doctor, doctor_id)
 
 
+async def list_doctors(
+    session: AsyncSession,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[Doctor]:
+    stmt = select(Doctor).order_by(Doctor.name).limit(limit).offset(offset)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
 # ── Patient ──
 
 
