@@ -1,4 +1,5 @@
-"""Distil-Whisper wrapper for medical speech-to-text.
+"""
+Distil-Whisper wrapper for medical speech-to-text.
 
 Model: distil-whisper/distil-large-v3.5 (756M params)
 Supports both batch transcription and streaming (chunked) mode.

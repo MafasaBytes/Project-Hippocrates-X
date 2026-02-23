@@ -1,4 +1,5 @@
-"""CXformer-base vision encoder for chest X-ray analysis.
+"""
+CXformer-base vision encoder for chest X-ray analysis.
 
 Model: m42-health/CXformer-base (87M params, DINOv2-adapted)
 Input:  PIL Image  ->  [1, 3, 518, 518]

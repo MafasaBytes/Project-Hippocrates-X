@@ -36,20 +36,30 @@ export function PatientForm({ opened, onClose }: Props) {
   });
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Register Patient" centered>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={<span id="register-patient-title">Register Patient</span>}
+      centered
+      aria-labelledby="register-patient-title"
+    >
       <Stack gap="sm">
         <TextInput
+          id="patient-name"
           label="Full Name"
           required
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}
+          aria-required="true"
         />
         <TextInput
+          id="patient-mrn"
           label="Medical Record Number"
           value={mrn}
           onChange={(e) => setMrn(e.currentTarget.value)}
         />
         <TextInput
+          id="patient-dob"
           label="Date of Birth"
           placeholder="YYYY-MM-DD"
           value={dob}
@@ -59,6 +69,7 @@ export function PatientForm({ opened, onClose }: Props) {
           onClick={() => mutation.mutate()}
           loading={mutation.isPending}
           disabled={!name.trim()}
+          aria-label="Register new patient"
         >
           Register
         </Button>

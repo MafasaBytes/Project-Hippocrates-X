@@ -1,4 +1,5 @@
-"""Real-time transcription service for WebSocket streaming.
+"""
+Real-time transcription service for WebSocket streaming.
 
 Receives audio chunks over a WebSocket, buffers them, and returns
 partial / final transcriptions using the AudioTranscriber.
@@ -7,11 +8,12 @@ partial / final transcriptions using the AudioTranscriber.
 from __future__ import annotations
 
 import io
+from typing import TYPE_CHECKING
 
 import numpy as np
-import soundfile as sf
 
-from src.models.audio import AudioTranscriber
+if TYPE_CHECKING:
+    from src.models.audio import AudioTranscriber
 
 
 class StreamingTranscriber:
@@ -20,16 +22,20 @@ class StreamingTranscriber:
     SAMPLE_RATE = 16_000
 
     def __init__(self, transcriber: AudioTranscriber | None = None):
-        self._transcriber = transcriber or AudioTranscriber()
+        if transcriber is not None:
+            self._transcriber = transcriber
+        else:
+            from src.models.audio import AudioTranscriber
+            self._transcriber = AudioTranscriber()
         self._buffer: list[np.ndarray] = []
 
     def add_chunk(self, raw_bytes: bytes) -> None:
         """Decode an audio chunk (WAV or raw PCM) and append to the buffer."""
+        import soundfile as sf
+
         try:
             audio_array, sr = sf.read(io.BytesIO(raw_bytes), dtype="float32")
             if sr != self.SAMPLE_RATE:
-                # Basic resampling: just accept the data as-is for now.
-                # A production system would use librosa.resample here.
                 pass
         except Exception:
             audio_array = np.frombuffer(raw_bytes, dtype=np.float32)

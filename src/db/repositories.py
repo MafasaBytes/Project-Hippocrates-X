@@ -18,9 +18,7 @@ from .models import (
 )
 
 
-# ── Doctor ──
-
-
+# Doctor
 async def create_doctor(session: AsyncSession, *, name: str, specialization: str | None = None) -> Doctor:
     doctor = Doctor(name=name, specialization=specialization)
     session.add(doctor)
@@ -32,21 +30,7 @@ async def create_doctor(session: AsyncSession, *, name: str, specialization: str
 async def get_doctor(session: AsyncSession, doctor_id: uuid.UUID) -> Doctor | None:
     return await session.get(Doctor, doctor_id)
 
-
-async def list_doctors(
-    session: AsyncSession,
-    *,
-    limit: int = 50,
-    offset: int = 0,
-) -> list[Doctor]:
-    stmt = select(Doctor).order_by(Doctor.name).limit(limit).offset(offset)
-    result = await session.execute(stmt)
-    return list(result.scalars().all())
-
-
-# ── Patient ──
-
-
+# Patient
 async def create_patient(
     session: AsyncSession,
     *,
@@ -79,9 +63,7 @@ async def search_patients(session: AsyncSession, query: str, *, limit: int = 20)
     return list(result.scalars().all())
 
 
-# ── Consultation ──
-
-
+# Consultation
 async def create_consultation(
     session: AsyncSession,
     *,
@@ -146,9 +128,7 @@ async def end_consultation(
     return consultation
 
 
-# ── Consultation Inputs ──
-
-
+# Consultation Inputs
 async def add_input(
     session: AsyncSession,
     *,
@@ -169,9 +149,7 @@ async def add_input(
     return inp
 
 
-# ── Analysis Results ──
-
-
+# Analysis Results
 async def save_analysis(
     session: AsyncSession,
     *,
@@ -193,10 +171,7 @@ async def save_analysis(
     await session.refresh(ar)
     return ar
 
-
-# ── Search ──
-
-
+# Search 
 async def fulltext_search(session: AsyncSession, query: str, *, limit: int = 20) -> list[Consultation]:
     ts_query = func.plainto_tsquery("english", query)
     stmt = (
@@ -207,7 +182,6 @@ async def fulltext_search(session: AsyncSession, query: str, *, limit: int = 20)
     )
     result = await session.execute(stmt)
     return list(result.scalars().all())
-
 
 async def semantic_search(
     session: AsyncSession, query_embedding: list[float], *, limit: int = 10
