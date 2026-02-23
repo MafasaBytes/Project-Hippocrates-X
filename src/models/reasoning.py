@@ -8,10 +8,14 @@ and generates medical reasoning responses.
 
 from __future__ import annotations
 
+import logging
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from src.config import settings
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
     "You are an expert medical assistant powered by Project Hippocrates X. "
@@ -36,18 +40,39 @@ class ReasoningEngine:
             return settings.device
         return "cuda" if torch.cuda.is_available() else "cpu"
 
+    def _use_4bit(self) -> bool:
+        return settings.quantize_4bit and torch.cuda.is_available()
+
     def load(self) -> None:
         self._tokenizer = AutoTokenizer.from_pretrained(
             self._model_name, token=settings.hf_token
         )
-        self._model = AutoModelForCausalLM.from_pretrained(
-            self._model_name,
-            torch_dtype=self._torch_dtype,
+
+        load_kwargs: dict = dict(
             low_cpu_mem_usage=True,
-            device_map=self._device if self._device == "auto" else None,
             token=settings.hf_token,
+            use_safetensors=False,
         )
-        if self._device != "auto":
+
+        if self._use_4bit():
+            from transformers import BitsAndBytesConfig
+
+            logger.info("Loading reasoning model with 4-bit quantization (bitsandbytes)")
+            load_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_quant_type="nf4",
+            )
+            load_kwargs["device_map"] = "auto"
+        else:
+            load_kwargs["dtype"] = self._torch_dtype
+            load_kwargs["device_map"] = self._device if self._device == "auto" else None
+
+        self._model = AutoModelForCausalLM.from_pretrained(
+            self._model_name, **load_kwargs
+        )
+
+        if not self._use_4bit() and self._device != "auto":
             self._model = self._model.to(self._device)
 
     @property

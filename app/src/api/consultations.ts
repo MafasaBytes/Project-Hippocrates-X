@@ -30,7 +30,9 @@ export const consultationsApi = {
 
   end: (id: string, data?: ConsultationEndRequest) =>
     api
-      .patch<ConsultationEndOut>(`/api/consultations/${id}`, data)
+      .patch<ConsultationEndOut>(`/api/consultations/${id}`, data, {
+        timeout: 5 * 60 * 1000, // 5 min — generates AI summary via the 8B LLM
+      })
       .then((r) => r.data),
 
   addTextInput: (id: string, raw_text: string) =>
@@ -44,6 +46,7 @@ export const consultationsApi = {
     return api
       .post<InputOut>(`/api/consultations/${id}/inputs/file`, form, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 5 * 60 * 1000, // 5 min — large files + possible processing
       })
       .then((r) => r.data);
   },

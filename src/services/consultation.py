@@ -6,6 +6,7 @@ ending sessions with AI-generated summaries, and persisting everything to the DB
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from pathlib import Path
 
@@ -75,7 +76,8 @@ class ConsultationService:
         input_id: uuid.UUID | None = None,
     ) -> dict:
         """Run multi-modal analysis within a consultation context."""
-        result = self._fusion.analyze(
+        result = await asyncio.to_thread(
+            self._fusion.analyze,
             prompt,
             image_path=image_path,
             clinical_text=clinical_text,
@@ -111,7 +113,7 @@ class ConsultationService:
 
         summary = None
         if generate_summary and consultation.analysis_results:
-            summary = self._generate_summary(consultation)
+            summary = await self._generate_summary(consultation)
 
         updated = await repo.end_consultation(session, consultation_id, summary=summary)
         return {
@@ -121,7 +123,7 @@ class ConsultationService:
             "summary": updated.summary,
         }
 
-    def _generate_summary(self, consultation) -> str:
+    async def _generate_summary(self, consultation) -> str:
         """Build a post-session summary from all analysis results."""
         all_responses = []
         for ar in consultation.analysis_results:
@@ -138,5 +140,10 @@ class ConsultationService:
             "clinical summary suitable for medical records:\n\n" + combined
         )
 
-        result = self._fusion.reasoning.generate(summary_prompt, max_new_tokens=512, temperature=0.2)
+        result = await asyncio.to_thread(
+            self._fusion.reasoning.generate,
+            summary_prompt,
+            max_new_tokens=512,
+            temperature=0.2,
+        )
         return result["response"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
@@ -68,7 +69,9 @@ async def standalone_analysis(
 
     Useful for quick one-off questions with optional clinical text.
     """
-    result = fusion.analyze(body.prompt, clinical_text=body.clinical_text)
+    result = await asyncio.to_thread(
+        fusion.analyze, body.prompt, clinical_text=body.clinical_text
+    )
     return AnalysisOut(
         analysis_id="standalone",
         response=result["response"],

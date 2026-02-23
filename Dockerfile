@@ -1,6 +1,4 @@
-# ─────────────────────────────────────────────────────────────────────────────
 # Stage 1: Build the React frontend
-# ─────────────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /build
@@ -13,10 +11,7 @@ COPY app/ ./
 RUN npm run build
 # Output: /build/dist/
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Stage 2: Python backend
-# ─────────────────────────────────────────────────────────────────────────────
 FROM python:3.11-slim AS backend
 
 # System dependencies:
@@ -52,4 +47,4 @@ EXPOSE 8000
 # Run DB migrations then start the server.
 # In production override CMD or use an entrypoint script.
 CMD alembic upgrade head && \
-    uvicorn src.api.app:app --host 0.0.0.0 --port 8000
+    uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 2

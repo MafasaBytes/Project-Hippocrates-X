@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     reasoning_model: str = "aaditya/Llama3-OpenBioLLM-8B"
 
     device: str = "auto"
+    quantize_4bit: bool = False
     upload_dir: Path = Path("data/uploads")
 
     @property

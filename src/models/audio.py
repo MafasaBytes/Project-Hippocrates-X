@@ -36,7 +36,7 @@ class AudioTranscriber:
         )
         self._model = AutoModelForSpeechSeq2Seq.from_pretrained(
             self._model_name,
-            torch_dtype=self._torch_dtype,
+            dtype=self._torch_dtype,
             low_cpu_mem_usage=True,
             token=settings.hf_token,
         ).to(self._device)
@@ -46,7 +46,7 @@ class AudioTranscriber:
             model=self._model,
             tokenizer=self._processor.tokenizer,
             feature_extractor=self._processor.feature_extractor,
-            torch_dtype=self._torch_dtype,
+            dtype=self._torch_dtype,
             device=self._device,
         )
 
