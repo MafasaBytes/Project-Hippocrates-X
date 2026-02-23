@@ -8,45 +8,54 @@ the reasoning LLM to produce a unified medical response.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from PIL import Image
-
-from src.models.audio import AudioTranscriber
-from src.models.nlp import ClinicalNLP
-from src.models.reasoning import ReasoningEngine
-from src.models.vision import VisionEncoder
+if TYPE_CHECKING:
+    from PIL import Image
+    from src.models.audio import AudioTranscriber
+    from src.models.nlp import ClinicalNLP
+    from src.models.reasoning import ReasoningEngine
+    from src.models.vision import VisionEncoder
 
 
 class FusionOrchestrator:
-    """Lazy-loads models on first use so startup stays fast."""
+    """Lazy-loads models on first use so startup stays fast.
+
+    All ML-heavy imports are deferred until a model is actually needed,
+    so the FastAPI server starts instantly without loading PyTorch.
+    """
 
     def __init__(self):
-        self._vision: VisionEncoder | None = None
-        self._nlp: ClinicalNLP | None = None
-        self._audio: AudioTranscriber | None = None
-        self._reasoning: ReasoningEngine | None = None
+        self._vision = None
+        self._nlp = None
+        self._audio = None
+        self._reasoning = None
 
     @property
     def vision(self) -> VisionEncoder:
         if self._vision is None:
+            from src.models.vision import VisionEncoder
             self._vision = VisionEncoder()
         return self._vision
 
     @property
     def nlp(self) -> ClinicalNLP:
         if self._nlp is None:
+            from src.models.nlp import ClinicalNLP
             self._nlp = ClinicalNLP()
         return self._nlp
 
     @property
     def audio(self) -> AudioTranscriber:
         if self._audio is None:
+            from src.models.audio import AudioTranscriber
             self._audio = AudioTranscriber()
         return self._audio
 
     @property
     def reasoning(self) -> ReasoningEngine:
         if self._reasoning is None:
+            from src.models.reasoning import ReasoningEngine
             self._reasoning = ReasoningEngine()
         return self._reasoning
 
@@ -72,6 +81,7 @@ class FusionOrchestrator:
         if image is not None:
             context_sections.append(self.vision.analyze(image))
         elif image_path is not None:
+            from PIL import Image
             img = Image.open(image_path).convert("RGB")
             context_sections.append(self.vision.analyze(img))
 

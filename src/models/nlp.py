@@ -1,4 +1,5 @@
-"""Bio_ClinicalBERT wrapper for clinical text processing.
+"""
+Bio_ClinicalBERT wrapper for clinical text processing.
 
 Model: emilyalsentzer/Bio_ClinicalBERT (110M params)
 Trained on MIMIC-III clinical notes (~880M words).

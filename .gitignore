@@ -6,6 +6,7 @@ data/uploads/*
 
 # Environment settings
 *.env
+.env.example
 
 # PyCache files
 __pycache__/
@@ -24,3 +25,7 @@ alembic/versions/__pycache__/
 # Cursor
 .cursor/
 .claude/
+# Docs
+docs/*
+docs/.DS_Store
+docs/
