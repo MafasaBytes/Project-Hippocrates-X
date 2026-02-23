@@ -48,17 +48,8 @@ export function RecentConsultations({ consultations }: Props) {
           {consultations.map((c) => (
             <Table.Tr
               key={c.id}
-              tabIndex={0}
-              role="button"
               onClick={() => navigate(`/consultations/${c.id}`)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate(`/consultations/${c.id}`);
-                }
-              }}
               style={{ cursor: "pointer" }}
-              aria-label={`View consultation ${c.id.slice(0, 8)}, ${c.status}`}
             >
               <Table.Td>
                 <Text size="sm" ff="var(--mantine-font-family-monospace)">
@@ -66,12 +57,10 @@ export function RecentConsultations({ consultations }: Props) {
                 </Text>
               </Table.Td>
               <Table.Td>
-                <Text size="sm">
-                  {c.consultation_type === "face_to_face" ? "Face to Face" : "Phone Call"}
-                </Text>
+                <Text size="sm">{c.consultation_type === "face_to_face" ? "Face to Face" : "Phone Call"}</Text>
               </Table.Td>
               <Table.Td>
-                <Badge color={STATUS_COLOR[c.status] ?? "slate"} variant="light" size="sm">
+                <Badge color={STATUS_COLOR[c.status] ?? "gray"} variant="light" size="sm">
                   {c.status}
                 </Badge>
               </Table.Td>

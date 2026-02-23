@@ -21,7 +21,6 @@ import {
   IconSearch,
   IconPlayerPlay,
   IconBrain,
-  IconChartBar,
 } from "@tabler/icons-react";
 import { BeginConsultationModal } from "../consultation/BeginConsultationModal";
 
