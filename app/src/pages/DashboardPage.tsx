@@ -1,4 +1,4 @@
-import { Grid, Title, Stack, SimpleGrid, Skeleton, Card } from "@mantine/core";
+import { Grid, Title, Stack, Skeleton, Card } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { consultationsApi } from "../api/consultations";
@@ -17,14 +17,16 @@ function DashboardSkeleton() {
       <Card padding="sm" radius="md" bg="dark.8">
         <Skeleton height={24} />
       </Card>
-      <SimpleGrid cols={{ base: 2, md: 4 }}>
+      <Grid>
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} padding="lg" radius="md" bg="dark.7">
-            <Skeleton height={12} width="60%" mb="md" />
-            <Skeleton height={36} width="50%" />
-          </Card>
+          <Grid.Col key={i} span={{ base: 6, md: 3 }}>
+            <Card padding="lg" radius="md" bg="dark.7">
+              <Skeleton height={12} width="60%" mb="md" />
+              <Skeleton height={36} width="50%" />
+            </Card>
+          </Grid.Col>
         ))}
-      </SimpleGrid>
+      </Grid>
       <Grid gutter="md">
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Card padding="md" radius="md" bg="dark.7">

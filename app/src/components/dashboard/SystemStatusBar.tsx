@@ -1,4 +1,4 @@
-import { Group, Text, Badge, Card, ThemeIcon } from "@mantine/core";
+import { Group, Text, Card, ThemeIcon } from "@mantine/core";
 import {
   IconHeartbeat,
   IconBrain,
