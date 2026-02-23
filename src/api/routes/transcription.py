@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -39,11 +40,11 @@ async def transcribe_stream(ws: WebSocket):
                 command = message["text"].strip().lower()
 
                 if command == "flush":
-                    result = transcriber.transcribe_buffer()
+                    result = await asyncio.to_thread(transcriber.transcribe_buffer)
                     await ws.send_text(json.dumps(result))
 
                 elif command == "done":
-                    result = transcriber.transcribe_and_flush()
+                    result = await asyncio.to_thread(transcriber.transcribe_and_flush)
                     await ws.send_text(json.dumps(result))
                     await ws.close()
                     break
