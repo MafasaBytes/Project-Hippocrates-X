@@ -8,7 +8,7 @@ interface ConfidenceBadgeProps {
 function getColor(value: number): string {
   if (value >= 90) return "green";
   if (value >= 70) return "blue";
-  if (value >= 50) return "yellow";
+  if (value >= 50) return "orange"; // Changed from yellow for better contrast
   return "red";
 }
 
@@ -36,7 +36,7 @@ export function ConfidenceBadge({ value, showBar = false }: ConfidenceBadgeProps
   }
 
   return (
-    <Badge color={color} variant="light" size="sm">
+    <Badge color={color} variant="light" size="sm" aria-label={`${label}, ${clamped}% confidence`}>
       {label} ({clamped}%)
     </Badge>
   );

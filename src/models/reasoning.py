@@ -1,4 +1,5 @@
-"""OpenBioLLM-8B reasoning engine for multi-modal medical fusion.
+"""
+OpenBioLLM-8B reasoning engine for multi-modal medical fusion.
 
 Model: aaditya/Llama3-OpenBioLLM-8B (8B params, DPO+RLHF)
 Accepts structured context from vision, NLP, and audio modalities
