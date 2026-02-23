@@ -48,10 +48,14 @@ export function PatientsPage() {
 
       {isLoading && <LoadingConsultationList />}
 
-      {!isLoading && searchValue.length >= 2 && patients.length === 0 && (
+      {!isLoading && patients.length === 0 && (
         <EmptyState
           title="No patients found"
-          description="Try a different search or register a new patient."
+          description={
+            searchValue.length >= 2
+              ? "Try a different search or register a new patient."
+              : "Register your first patient to get started."
+          }
           icon="search"
           action={
             <Button leftSection={<IconUserPlus size={16} />} onClick={() => setFormOpen(true)}>
@@ -61,7 +65,7 @@ export function PatientsPage() {
         />
       )}
 
-      {!isLoading && (patients.length > 0 || searchValue.length < 2) && (
+      {!isLoading && patients.length > 0 && (
       <Card withBorder padding={0}>
         <Table highlightOnHover>
           <Table.Thead>
@@ -73,16 +77,7 @@ export function PatientsPage() {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {patients.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={4}>
-                  <Text size="sm" c="dimmed" ta="center" py="xl">
-                    Type at least 2 characters to search
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-            patients.map((p) => (
+            {patients.map((p) => (
               <Table.Tr
                 key={p.id}
                 tabIndex={0}
@@ -120,8 +115,7 @@ export function PatientsPage() {
                   </Text>
               </Table.Td>
             </Table.Tr>
-            ))
-            )}
+            ))}
           </Table.Tbody>
         </Table>
       </Card>

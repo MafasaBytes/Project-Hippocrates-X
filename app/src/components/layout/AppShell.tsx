@@ -18,6 +18,7 @@ import {
   IconLayoutDashboard,
   IconStethoscope,
   IconUsers,
+  IconUserShield,
   IconSearch,
   IconPlayerPlay,
   IconBrain,
@@ -36,6 +37,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Command Center", path: "/", icon: IconLayoutDashboard },
       { label: "Consultations", path: "/consultations", icon: IconStethoscope },
       { label: "Patients", path: "/patients", icon: IconUsers },
+      { label: "Doctors", path: "/doctors", icon: IconUserShield },
     ],
   },
   {

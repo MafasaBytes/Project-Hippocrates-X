@@ -15,14 +15,15 @@ router = APIRouter(prefix="/api/patients", tags=["patients"])
 
 
 @router.get("", response_model=list[PatientOut])
-async def search_patients(
+async def list_or_search_patients(
     q: str = Query("", min_length=0),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    if not q:
-        return []
-    return await repo.search_patients(db, q, limit=limit)
+    if q:
+        return await repo.search_patients(db, q, limit=limit)
+    return await repo.list_patients(db, limit=limit, offset=offset)
 
 
 @router.post("", response_model=PatientOut, status_code=201)
