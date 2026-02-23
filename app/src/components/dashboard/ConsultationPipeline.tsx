@@ -10,13 +10,11 @@ import {
 } from "@mantine/core";
 import {
   IconPlayerPlay,
-  IconLoader,
   IconCheck,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import type { ConsultationDetail } from "../../types/api";
-import { StatusBadge } from "../intelligence/StatusBadge";
 
 dayjs.extend(relativeTime);
 

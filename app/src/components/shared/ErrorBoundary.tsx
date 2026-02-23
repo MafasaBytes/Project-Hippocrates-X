@@ -30,8 +30,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
-    // In production, send to error reporting service
-    // logErrorToService(error, errorInfo);
   }
 
   handleReset = () => {

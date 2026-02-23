@@ -1,4 +1,4 @@
-import { Badge, Group, Text } from "@mantine/core";
+import { Badge } from "@mantine/core";
 import { IconCpu } from "@tabler/icons-react";
 
 interface ModelVersionBadgeProps {
