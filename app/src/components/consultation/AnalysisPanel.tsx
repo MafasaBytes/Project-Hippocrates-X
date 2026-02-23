@@ -12,6 +12,7 @@ import {
   Transition,
 } from "@mantine/core";
 import { IconBrain } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import { useMutation } from "@tanstack/react-query";
 import { analysisApi } from "../../api/analysis";
 import { ConfidenceBadge } from "./ConfidenceBadge";
@@ -42,7 +43,12 @@ export function AnalysisPanel({ consultationId }: Props) {
     },
     onError: (error: { message?: string }) => {
       isProcessingRef.current = false;
-      // Error handling will be improved in Phase 1 error handling
+      notifications.show({
+        title: "Analysis failed",
+        message: error?.message ?? "Could not complete analysis. Please try again.",
+        color: "red",
+        autoClose: 6000,
+      });
     },
   });
 

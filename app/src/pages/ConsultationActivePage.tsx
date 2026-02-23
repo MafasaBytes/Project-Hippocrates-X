@@ -6,16 +6,17 @@ import {
   Stack,
   Badge,
   Group,
-  Accordion,
-  Loader,
-  Center,
   Breadcrumbs,
   Anchor,
+  Button,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { consultationsApi } from "../api/consultations";
 import { ConsultationWorkspace } from "../components/consultation/ConsultationWorkspace";
+import { EmptyState } from "../components/shared/EmptyState";
+import { LoadingConsultationList } from "../components/shared/LoadingSkeleton";
 import dayjs from "dayjs";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export function ConsultationActivePage() {
   const { id } = useParams<{ id: string }>();
@@ -25,21 +26,37 @@ export function ConsultationActivePage() {
     queryFn: () => consultationsApi.get(id!),
     enabled: !!id,
     refetchInterval: 5000,
+    refetchIntervalInBackground: false,
   });
+
+  useDocumentTitle(
+    consultation
+      ? consultation.status === "active"
+        ? "Active consultation"
+        : "Consultation detail"
+      : "Consultation"
+  );
 
   if (isLoading) {
     return (
-      <Center py="xl">
-        <Loader />
-      </Center>
+      <>
+        <LoadingConsultationList />
+      </>
     );
   }
 
   if (!consultation) {
     return (
-      <Text c="dimmed" ta="center" py="xl">
-        Consultation not found
-      </Text>
+      <EmptyState
+        title="Consultation not found"
+        description="This consultation may have been removed or the link is invalid."
+        icon="error"
+        action={
+          <Button component={Link} to="/consultations" variant="light">
+            Back to Consultations
+          </Button>
+        }
+      />
     );
   }
 
@@ -58,7 +75,7 @@ export function ConsultationActivePage() {
         <ConsultationWorkspace consultation={consultation} />
       ) : (
         <>
-          <Title order={2} mb="lg">
+          <Title order={1} mb="lg">
             Consultation Detail
           </Title>
 
