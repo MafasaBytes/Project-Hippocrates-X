@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Modal,
@@ -37,6 +37,25 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
   const [newPatientMRN, setNewPatientMRN] = useState("");
 
   const { searchValue, setSearchValue, patients, isLoading } = usePatientLookup();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus first input when modal opens
+  useEffect(() => {
+    if (opened && firstInputRef.current) {
+      setTimeout(() => firstInputRef.current?.focus(), 100);
+    }
+  }, [opened]);
+
+  // Focus management when step changes
+  useEffect(() => {
+    if (opened) {
+      const activeStep = step === 0 ? firstInputRef : null;
+      if (activeStep && activeStep.current) {
+        setTimeout(() => activeStep.current?.focus(), 100);
+      }
+    }
+  }, [step, opened]);
 
   const createPatientMutation = useMutation({
     mutationFn: () =>
@@ -68,10 +87,10 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
       resetState();
       navigate(`/consultations/${result.consultation_id}`);
     },
-    onError: () => {
+    onError: (error: { message?: string }) => {
       notifications.show({
         title: "Error",
-        message: "Failed to start consultation",
+        message: error.message || "Failed to start consultation",
         color: "red",
       });
     },
@@ -92,6 +111,14 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
     resetState();
   };
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape" && opened) {
+      e.preventDefault();
+      handleClose();
+    }
+  };
+
   return (
     <Modal
       opened={opened}
@@ -99,141 +126,165 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
       title="Begin Consultation"
       size="lg"
       centered
+      onCloseButtonClick={handleClose}
+      aria-labelledby="begin-consultation-title"
     >
-      <Stepper active={step} onStepClick={setStep} size="sm" mb="lg">
-        <Stepper.Step label="Patient" description="Identify patient">
-          <Stack gap="md" mt="md">
-            <TextInput
-              label="Search by Patient ID or Medical Record Number"
-              placeholder="Enter ID or MRN..."
-              leftSection={<IconSearch size={16} />}
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.currentTarget.value)}
-              rightSection={isLoading ? <Loader size={16} /> : null}
-            />
-
-            {patients.length > 0 && (
-              <Stack gap="xs">
-                <Text size="sm" fw={500} c="dimmed">
-                  Matching patients:
-                </Text>
-                {patients.map((p) => (
-                  <Card
-                    key={p.id}
-                    padding="sm"
-                    withBorder
-                    onClick={() => {
-                      setSelectedPatient(p);
-                      setStep(1);
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <Group justify="space-between">
-                      <div>
-                        <Text fw={500}>{p.name}</Text>
-                        <Text size="xs" c="dimmed" ff="var(--mantine-font-family-monospace)">
-                          MRN: {p.medical_record_number ?? "N/A"} | ID: {p.id.slice(0, 8)}
-                        </Text>
-                      </div>
-                      <Button size="xs" variant="light">
-                        Select
-                      </Button>
-                    </Group>
-                  </Card>
-                ))}
-              </Stack>
-            )}
-
-            {searchValue.length >= 2 && !isLoading && patients.length === 0 && (
-              <Alert icon={<IconAlertCircle size={16} />} color="gray" variant="light">
-                <Text size="sm" mb="sm">
-                  No patient found. Register a new patient?
-                </Text>
-                <Stack gap="xs">
-                  <TextInput
-                    label="Full Name"
-                    size="sm"
-                    value={newPatientName}
-                    onChange={(e) => setNewPatientName(e.currentTarget.value)}
-                    required
-                  />
-                  <TextInput
-                    label="Medical Record Number"
-                    size="sm"
-                    value={newPatientMRN}
-                    onChange={(e) => setNewPatientMRN(e.currentTarget.value)}
-                  />
-                  <Button
-                    size="sm"
-                    variant="light"
-                    onClick={() => createPatientMutation.mutate()}
-                    loading={createPatientMutation.isPending}
-                    disabled={!newPatientName.trim()}
-                  >
-                    Register Patient
-                  </Button>
-                </Stack>
-              </Alert>
-            )}
-
-            {selectedPatient && (
-              <Card withBorder bg="indigo.0" padding="sm">
-                <Text size="sm" fw={600}>
-                  Selected: {selectedPatient.name}
-                </Text>
-                <Text size="xs" c="dimmed" ff="var(--mantine-font-family-monospace)">
-                  ID: {selectedPatient.id.slice(0, 8)} | MRN:{" "}
-                  {selectedPatient.medical_record_number ?? "N/A"}
-                </Text>
-              </Card>
-            )}
-          </Stack>
-        </Stepper.Step>
-
-        <Stepper.Step label="Setup" description="Consultation type">
-          <Stack gap="md" mt="md">
-            {selectedPatient && (
-              <Card withBorder padding="sm">
-                <Text size="sm" fw={500}>
-                  Patient: {selectedPatient.name}
-                </Text>
-              </Card>
-            )}
-
-            <div>
-              <Text size="sm" fw={500} mb={4}>
-                Consultation Type
-              </Text>
-              <SegmentedControl
-                fullWidth
-                data={[
-                  { label: "Face to Face", value: "face_to_face" },
-                  { label: "Phone Call", value: "phone_call" },
-                ]}
-                value={consultType}
-                onChange={(v) => setConsultType(v as ConsultationType)}
+      <div ref={modalRef} tabIndex={-1} onKeyDown={handleKeyDown}>
+        <Stepper active={step} onStepClick={setStep} size="sm" mb="lg">
+          <Stepper.Step label="Patient" description="Identify patient">
+            <Stack gap="md" mt="md">
+              <TextInput
+                ref={firstInputRef}
+                label="Search by Patient ID or Medical Record Number"
+                placeholder="Enter ID or MRN..."
+                leftSection={<IconSearch size={16} />}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.currentTarget.value)}
+                rightSection={isLoading ? <Loader size={16} /> : null}
+                aria-describedby="patient-search-description"
               />
-            </div>
+              <Text id="patient-search-description" size="xs" c="dimmed" hidden>
+                Enter at least 2 characters to search for patients
+              </Text>
 
-            <Textarea
-              label="Pre-consultation Notes (optional)"
-              placeholder="Any preliminary observations..."
-              minRows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.currentTarget.value)}
-            />
+              {patients.length > 0 && (
+                <Stack gap="xs" role="list" aria-label="Matching patients list">
+                  <Text size="sm" fw={500} c="dimmed">
+                    Matching patients:
+                  </Text>
+                  {patients.map((p) => (
+                    <Card
+                      key={p.id}
+                      padding="sm"
+                      withBorder
+                      onClick={() => {
+                        setSelectedPatient(p);
+                        setStep(1);
+                      }}
+                      style={{ cursor: "pointer" }}
+                      tabIndex={0}
+                      role="listitem"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedPatient(p);
+                          setStep(1);
+                        }
+                      }}
+                    >
+                      <Group justify="space-between">
+                        <div>
+                          <Text fw={500}>{p.name}</Text>
+                          <Text size="xs" c="dimmed" ff="var(--mantine-font-family-monospace)">
+                            MRN: {p.medical_record_number ?? "N/A"} | ID: {p.id.slice(0, 8)}
+                          </Text>
+                        </div>
+                        <Button size="xs" variant="light" aria-label={`Select patient ${p.name}`}>
+                          Select
+                        </Button>
+                      </Group>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
 
-            <Button
-              fullWidth
-              onClick={() => startMutation.mutate()}
-              loading={startMutation.isPending}
-              disabled={!selectedPatient}
-            >
-              Start Session
-            </Button>
-          </Stack>
-        </Stepper.Step>
-      </Stepper>
+              {searchValue.length >= 2 && !isLoading && patients.length === 0 && (
+                <Alert icon={<IconAlertCircle size={16} />} color="gray" variant="light">
+                  <Text size="sm" mb="sm">
+                    No patient found. Register a new patient?
+                  </Text>
+                  <Stack gap="xs">
+                    <TextInput
+                      label="Full Name"
+                      size="sm"
+                      value={newPatientName}
+                      onChange={(e) => setNewPatientName(e.currentTarget.value)}
+                      required
+                      aria-label="New patient full name"
+                    />
+                    <TextInput
+                      label="Medical Record Number"
+                      size="sm"
+                      value={newPatientMRN}
+                      onChange={(e) => setNewPatientMRN(e.currentTarget.value)}
+                      aria-label="New patient medical record number"
+                    />
+                    <Button
+                      size="sm"
+                      variant="light"
+                      onClick={() => createPatientMutation.mutate()}
+                      loading={createPatientMutation.isPending}
+                      disabled={!newPatientName.trim()}
+                      aria-label="Register new patient"
+                    >
+                      Register Patient
+                    </Button>
+                  </Stack>
+                </Alert>
+              )}
+
+              {selectedPatient && (
+                <Card withBorder bg="indigo.0" padding="sm" role="alert">
+                  <Text size="sm" fw={600}>
+                    Selected: {selectedPatient.name}
+                  </Text>
+                  <Text size="xs" c="dimmed" ff="var(--mantine-font-family-monospace)">
+                    ID: {selectedPatient.id.slice(0, 8)} | MRN:{" "}
+                    {selectedPatient.medical_record_number ?? "N/A"}
+                  </Text>
+                </Card>
+              )}
+            </Stack>
+          </Stepper.Step>
+
+          <Stepper.Step label="Setup" description="Consultation type">
+            <Stack gap="md" mt="md">
+              {selectedPatient && (
+                <Card withBorder padding="sm">
+                  <Text size="sm" fw={500}>
+                    Patient: {selectedPatient.name}
+                  </Text>
+                </Card>
+              )}
+
+              <div>
+                <Text size="sm" fw={500} mb={4}>
+                  Consultation Type
+                </Text>
+                <SegmentedControl
+                  fullWidth
+                  data={[
+                    { label: "Face to Face", value: "face_to_face" },
+                    { label: "Phone Call", value: "phone_call" },
+                  ]}
+                  value={consultType}
+                  onChange={(v) => setConsultType(v as ConsultationType)}
+                  aria-label="Select consultation type"
+                />
+              </div>
+
+              <Textarea
+                label="Pre-consultation Notes (optional)"
+                placeholder="Any preliminary observations..."
+                minRows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.currentTarget.value)}
+                aria-label="Pre-consultation notes"
+              />
+
+              <Button
+                fullWidth
+                onClick={() => startMutation.mutate()}
+                loading={startMutation.isPending}
+                disabled={!selectedPatient}
+                aria-label="Start consultation session"
+              >
+                Start Session
+              </Button>
+            </Stack>
+          </Stepper.Step>
+        </Stepper>
+      </div>
     </Modal>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Card,
   Text,
@@ -8,6 +8,8 @@ import {
   Group,
   Badge,
   ActionIcon,
+  Progress,
+  Transition,
 } from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { notifications } from "@mantine/notifications";
@@ -24,6 +26,8 @@ const ACCEPT_TYPES = {
   "application/pdf": [".pdf"],
 };
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 interface Props {
   consultationId: string;
 }
@@ -32,6 +36,7 @@ export function InputPanel({ consultationId }: Props) {
   const qc = useQueryClient();
   const [textInput, setTextInput] = useState("");
   const [uploads, setUploads] = useState<InputOut[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fileMutation = useMutation({
     mutationFn: (file: File) => consultationsApi.addFileInput(consultationId, file),
@@ -40,8 +45,12 @@ export function InputPanel({ consultationId }: Props) {
       qc.invalidateQueries({ queryKey: ["consultation", consultationId] });
       notifications.show({ title: "File uploaded", message: result.type, color: "green" });
     },
-    onError: () => {
-      notifications.show({ title: "Upload failed", message: "Check file format", color: "red" });
+    onError: (error: { message?: string }) => {
+      notifications.show({
+        title: "Upload failed",
+        message: error.message || "Failed to upload file. Please check the file format and try again.",
+        color: "red",
+      });
     },
   });
 
@@ -52,10 +61,24 @@ export function InputPanel({ consultationId }: Props) {
       setTextInput("");
       qc.invalidateQueries({ queryKey: ["consultation", consultationId] });
     },
+    onError: (error: { message?: string }) => {
+      notifications.show({
+        title: "Failed to submit text",
+        message: error.message || "Please try again.",
+        color: "red",
+      });
+    },
   });
 
+  // Focus text area when component mounts
+  useEffect(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.focus();
+    }
+  }, []);
+
   return (
-    <Card withBorder padding="md" h="100%">
+    <Card withBorder padding="md" h="100%" role="region" aria-label="Input file uploads and clinical notes">
       <Text fw={600} mb="sm">
         Inputs
       </Text>
@@ -64,24 +87,25 @@ export function InputPanel({ consultationId }: Props) {
           onDrop={(files) => files.forEach((f) => fileMutation.mutate(f))}
           accept={ACCEPT_TYPES}
           loading={fileMutation.isPending}
-          maxSize={50 * 1024 * 1024}
+          maxSize={MAX_FILE_SIZE}
+          error={fileMutation.isError ? "Invalid file format or size" : undefined}
         >
           <Group justify="center" gap="sm" py="md" style={{ pointerEvents: "none" }}>
             <Dropzone.Accept>
-              <IconUpload size={28} stroke={1.5} />
+              <IconUpload size={28} stroke={1.5} aria-hidden="true" />
             </Dropzone.Accept>
             <Dropzone.Reject>
-              <IconX size={28} stroke={1.5} />
+              <IconX size={28} stroke={1.5} aria-hidden="true" />
             </Dropzone.Reject>
             <Dropzone.Idle>
-              <IconUpload size={28} stroke={1.5} color="var(--mantine-color-dimmed)" />
+              <IconUpload size={28} stroke={1.5} color="var(--mantine-color-dimmed)" aria-hidden="true" />
             </Dropzone.Idle>
             <div>
               <Text size="sm" inline>
                 Drop files here
               </Text>
               <Text size="xs" c="dimmed" inline mt={4}>
-                Images, audio, video, or documents
+                Images, audio, video, or documents (max 50MB)
               </Text>
             </div>
           </Group>
@@ -92,6 +116,8 @@ export function InputPanel({ consultationId }: Props) {
           minRows={3}
           value={textInput}
           onChange={(e) => setTextInput(e.currentTarget.value)}
+          aria-label="Clinical notes input"
+          description="Enter any additional clinical information or observations"
         />
         <Button
           size="sm"
@@ -100,6 +126,7 @@ export function InputPanel({ consultationId }: Props) {
           onClick={() => textInput.trim() && textMutation.mutate(textInput.trim())}
           loading={textMutation.isPending}
           disabled={!textInput.trim()}
+          aria-label="Submit clinical notes"
         >
           Submit Text
         </Button>
@@ -109,17 +136,19 @@ export function InputPanel({ consultationId }: Props) {
             <Text size="xs" c="dimmed" fw={500} mt="xs">
               Uploaded ({uploads.length})
             </Text>
-            {uploads.map((u) => (
-              <Group key={u.input_id} gap="xs">
-                <IconFile size={14} />
-                <Badge size="xs" variant="light">
-                  {u.type}
-                </Badge>
-                <Text size="xs" c="dimmed" ff="var(--mantine-font-family-monospace)">
-                  {u.input_id.slice(0, 8)}
-                </Text>
-              </Group>
-            ))}
+            <div role="list" aria-label="Uploaded files list">
+              {uploads.map((u) => (
+                <Group key={u.input_id} gap="xs" role="listitem">
+                  <IconFile size={14} aria-hidden="true" />
+                  <Badge size="xs" variant="light">
+                    {u.type}
+                  </Badge>
+                  <Text size="xs" c="dimmed" ff="var(--mantine-font-family-monospace)">
+                    {u.input_id.slice(0, 8)}
+                  </Text>
+                </Group>
+              ))}
+            </div>
           </>
         )}
       </Stack>
