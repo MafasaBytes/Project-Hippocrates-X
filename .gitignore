@@ -20,3 +20,6 @@ models_cache/
 
 # Alembic
 alembic/versions/__pycache__/
+
+# Docs
+docs/

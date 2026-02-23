@@ -1,70 +1,105 @@
-import { Grid, Title } from "@mantine/core";
+import { Grid, Title, Stack, SimpleGrid, Skeleton, Card } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { consultationsApi } from "../api/consultations";
 import { StatsGrid } from "../components/dashboard/StatsGrid";
-import { RecentConsultations } from "../components/dashboard/RecentConsultations";
-import { AnomalyFeed } from "../components/dashboard/AnomalyFeed";
+import { SystemStatusBar } from "../components/dashboard/SystemStatusBar";
+import { ConsultationPipeline } from "../components/dashboard/ConsultationPipeline";
+import { LiveActivityFeed } from "../components/dashboard/LiveActivityFeed";
 import {
-  LoadingStatsGrid,
-  LoadingConsultationList,
-  LoadingCard,
-} from "../components/shared/LoadingSkeleton";
-import type { Anomaly } from "../components/dashboard/AnomalyFeed";
+  RiskDistribution,
+  ModelConfidenceSnapshot,
+} from "../components/dashboard/RiskDistribution";
+
+function DashboardSkeleton() {
+  return (
+    <Stack gap="md">
+      <Card padding="sm" radius="md" bg="dark.8">
+        <Skeleton height={24} />
+      </Card>
+      <SimpleGrid cols={{ base: 2, md: 4 }}>
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} padding="lg" radius="md" bg="dark.7">
+            <Skeleton height={12} width="60%" mb="md" />
+            <Skeleton height={36} width="50%" />
+          </Card>
+        ))}
+      </SimpleGrid>
+      <Grid gutter="md">
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card padding="md" radius="md" bg="dark.7">
+            <Skeleton height={16} width="40%" mb="md" />
+            <Stack gap="xs">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} height={32} />
+              ))}
+            </Stack>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card padding="md" radius="md" bg="dark.7">
+            <Skeleton height={16} width="40%" mb="md" />
+            <Stack gap="xs">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} height={32} />
+              ))}
+            </Stack>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </Stack>
+  );
+}
 
 export function DashboardPage() {
-  useDocumentTitle("Dashboard");
+  useDocumentTitle("Command Center");
   const { data: consultations = [], isLoading } = useQuery({
     queryKey: ["consultations"],
     queryFn: () => consultationsApi.list({ limit: 20 }),
   });
 
   const active = consultations.filter((c) => c.status === "active").length;
-  const completed = consultations.filter((c) => c.status === "completed").length;
-
-  // Anomalies would come from analysis results tagged as anomaly-type.
-  const anomalies: Anomaly[] = [];
+  const pending = consultations.filter((c) => c.status === "active").length;
 
   if (isLoading) {
     return (
       <>
-        <Title order={1} mb="lg">
-          Dashboard
+        <Title order={1} mb="md">
+          Command Center
         </Title>
-        <LoadingStatsGrid />
-        <Grid mt="lg" gutter="md">
-          <Grid.Col span={{ base: 12, md: 7 }}>
-            <LoadingConsultationList />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 5 }}>
-            <LoadingCard />
-          </Grid.Col>
-        </Grid>
+        <DashboardSkeleton />
       </>
     );
   }
 
   return (
-    <>
-      <Title order={1} mb="lg">
-        Dashboard
-      </Title>
+    <Stack gap="md">
+      <Title order={1}>Command Center</Title>
+
+      <SystemStatusBar />
 
       <StatsGrid
         activeConsultations={active}
-        patientsSeen={completed}
-        analysesPerformed={0}
-        pendingReviews={0}
+        pendingReviews={pending}
       />
 
-      <Grid mt="lg" gutter="md">
-        <Grid.Col span={{ base: 12, md: 7 }}>
-          <RecentConsultations consultations={consultations} />
+      <Grid gutter="md">
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <ConsultationPipeline consultations={consultations} />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 5 }}>
-          <AnomalyFeed anomalies={anomalies} />
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <LiveActivityFeed consultations={consultations} />
         </Grid.Col>
       </Grid>
-    </>
+
+      <Grid gutter="md">
+        <Grid.Col span={{ base: 12, md: 7 }}>
+          <RiskDistribution />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 5 }}>
+          <ModelConfidenceSnapshot />
+        </Grid.Col>
+      </Grid>
+    </Stack>
   );
 }

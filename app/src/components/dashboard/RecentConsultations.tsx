@@ -4,9 +4,9 @@ import dayjs from "dayjs";
 import type { ConsultationDetail } from "../../types/api";
 
 const STATUS_COLOR: Record<string, string> = {
-  active: "blue",
-  completed: "green",
-  cancelled: "gray",
+  active: "clinical",
+  completed: "success",
+  cancelled: "slate",
 };
 
 interface Props {
@@ -17,8 +17,13 @@ export function RecentConsultations({ consultations }: Props) {
   const navigate = useNavigate();
 
   return (
-    <Card withBorder padding="md">
-      <Text fw={600} mb="sm">
+    <Card
+      padding="md"
+      radius="md"
+      bg="dark.7"
+      style={{ border: "1px solid var(--mantine-color-dark-5)" }}
+    >
+      <Text fw={600} size="sm" mb="sm">
         Recent Consultations
       </Text>
       <Table highlightOnHover>
@@ -61,10 +66,12 @@ export function RecentConsultations({ consultations }: Props) {
                 </Text>
               </Table.Td>
               <Table.Td>
-                <Text size="sm">{c.consultation_type === "face_to_face" ? "Face to Face" : "Phone Call"}</Text>
+                <Text size="sm">
+                  {c.consultation_type === "face_to_face" ? "Face to Face" : "Phone Call"}
+                </Text>
               </Table.Td>
               <Table.Td>
-                <Badge color={STATUS_COLOR[c.status] ?? "gray"} variant="light" size="sm">
+                <Badge color={STATUS_COLOR[c.status] ?? "slate"} variant="light" size="sm">
                   {c.status}
                 </Badge>
               </Table.Td>

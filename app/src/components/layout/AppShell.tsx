@@ -6,11 +6,12 @@ import {
   Text,
   NavLink,
   TextInput,
-  ActionIcon,
   Burger,
   Divider,
   Box,
   Button,
+  Stack,
+  ThemeIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -19,14 +20,31 @@ import {
   IconUsers,
   IconSearch,
   IconPlayerPlay,
+  IconBrain,
+  IconChartBar,
 } from "@tabler/icons-react";
 import { BeginConsultationModal } from "../consultation/BeginConsultationModal";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", path: "/", icon: IconLayoutDashboard },
-  { label: "Consultations", path: "/consultations", icon: IconStethoscope },
-  { label: "Patients", path: "/patients", icon: IconUsers },
-  { label: "Search", path: "/search", icon: IconSearch },
+interface NavGroup {
+  title: string;
+  items: { label: string; path: string; icon: React.ElementType }[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: "Clinical Operations",
+    items: [
+      { label: "Command Center", path: "/", icon: IconLayoutDashboard },
+      { label: "Consultations", path: "/consultations", icon: IconStethoscope },
+      { label: "Patients", path: "/patients", icon: IconUsers },
+    ],
+  },
+  {
+    title: "Intelligence",
+    items: [
+      { label: "Search", path: "/search", icon: IconSearch },
+    ],
+  },
 ];
 
 export function AppLayout() {
@@ -35,9 +53,7 @@ export function AppLayout() {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [consultModalOpen, setConsultModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [activeSidebarItem, setActiveSidebarItem] = useState(0);
 
-  // Handle focus management for modals
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && consultModalOpen) {
@@ -55,13 +71,13 @@ export function AppLayout() {
     }
   };
 
-  const handleNavClick = (index: number, path: string) => {
-    setActiveSidebarItem(index);
+  const handleNavClick = (path: string) => {
     navigate(path);
-    if (mobileOpened) {
-      toggleMobile();
-    }
+    if (mobileOpened) toggleMobile();
   };
+
+  const isActive = (path: string) =>
+    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   return (
     <>
@@ -91,13 +107,31 @@ export function AppLayout() {
       </a>
       <AppShell
         header={{ height: 56 }}
-        navbar={{ width: 240, breakpoint: "sm", collapsed: { mobile: !mobileOpened } }}
+        navbar={{
+          width: 260,
+          breakpoint: "sm",
+          collapsed: { mobile: !mobileOpened },
+        }}
         padding="lg"
         aria-label="Main application shell"
+        styles={{
+          main: {
+            backgroundColor: "var(--mantine-color-dark-8)",
+            minHeight: "100vh",
+          },
+          header: {
+            backgroundColor: "var(--mantine-color-dark-9)",
+            borderBottom: "1px solid var(--mantine-color-dark-6)",
+          },
+          navbar: {
+            backgroundColor: "var(--mantine-color-dark-9)",
+            borderRight: "1px solid var(--mantine-color-dark-6)",
+          },
+        }}
       >
         <AppShell.Header role="banner">
           <Group h="100%" px="md" justify="space-between">
-            <Group>
+            <Group gap="sm">
               <Burger
                 opened={mobileOpened}
                 onClick={toggleMobile}
@@ -105,9 +139,14 @@ export function AppLayout() {
                 size="sm"
                 aria-label="Toggle navigation menu"
               />
-              <Text fw={700} size="lg" ff="var(--mantine-font-family)">
-                Hippocrates X
-              </Text>
+              <Group gap={6}>
+                <ThemeIcon size="sm" variant="filled" color="indigo" radius="xl">
+                  <IconBrain size={12} />
+                </ThemeIcon>
+                <Text fw={700} size="md" ff="var(--mantine-font-family)">
+                  Hippocrates X
+                </Text>
+              </Group>
             </Group>
             <form onSubmit={handleSearch} role="search" aria-label="Global search">
               <TextInput
@@ -116,41 +155,85 @@ export function AppLayout() {
                 leftSection={<IconSearch size={16} />}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.currentTarget.value)}
-                w={320}
+                w={{ base: 200, sm: 320 }}
                 size="sm"
+                radius="md"
+                styles={{
+                  input: {
+                    backgroundColor: "var(--mantine-color-dark-7)",
+                    borderColor: "var(--mantine-color-dark-5)",
+                  },
+                }}
               />
             </form>
-            <Box />
+            <Box visibleFrom="sm" />
           </Group>
         </AppShell.Header>
 
         <AppShell.Navbar p="sm" role="navigation" aria-label="Main navigation">
           <AppShell.Section grow>
-            {NAV_ITEMS.map((item, index) => (
-              <NavLink
-                key={item.path}
-                label={item.label}
-                leftSection={<item.icon size={18} stroke={1.5} />}
-                active={
-                  item.path === "/"
-                    ? location.pathname === "/"
-                    : location.pathname.startsWith(item.path)
-                }
-                onClick={() => handleNavClick(index, item.path)}
-                variant="light"
-                mb={2}
-                aria-current={location.pathname === item.path ? "page" : undefined}
-              />
-            ))}
+            <Stack gap="lg">
+              {NAV_GROUPS.map((group) => (
+                <div key={group.title}>
+                  <Text
+                    size="xs"
+                    fw={600}
+                    c="dimmed"
+                    tt="uppercase"
+                    mb={6}
+                    px="sm"
+                    style={{ letterSpacing: "0.06em" }}
+                  >
+                    {group.title}
+                  </Text>
+                  <Stack gap={2}>
+                    {group.items.map((item) => (
+                      <NavLink
+                        key={item.path}
+                        label={item.label}
+                        leftSection={<item.icon size={18} stroke={1.5} />}
+                        active={isActive(item.path)}
+                        onClick={() => handleNavClick(item.path)}
+                        variant="light"
+                        aria-current={isActive(item.path) ? "page" : undefined}
+                        styles={{
+                          root: {
+                            borderRadius: "var(--mantine-radius-md)",
+                            transition: "all 0.15s ease",
+                          },
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                </div>
+              ))}
+            </Stack>
           </AppShell.Section>
 
           <AppShell.Section>
-            <Divider mb="sm" />
+            <Divider mb="sm" color="dark.6" />
             <Button
               fullWidth
+              size="md"
               leftSection={<IconPlayerPlay size={18} />}
               onClick={() => setConsultModalOpen(true)}
               aria-label="Start a new consultation session"
+              variant="gradient"
+              gradient={{ from: "indigo.7", to: "clinical.7", deg: 135 }}
+              radius="md"
+              styles={{
+                root: {
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                },
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 20px var(--mantine-color-indigo-9)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
             >
               Begin Consultation
             </Button>
