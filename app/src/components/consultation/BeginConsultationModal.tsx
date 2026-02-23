@@ -126,7 +126,6 @@ export function BeginConsultationModal({ opened, onClose }: Props) {
       title="Begin Consultation"
       size="lg"
       centered
-      onCloseButtonClick={handleClose}
       aria-labelledby="begin-consultation-title"
     >
       <div ref={modalRef} tabIndex={-1} onKeyDown={handleKeyDown}>

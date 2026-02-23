@@ -48,10 +48,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
       }
 
       return (
-        <Card withBorder padding="lg" bg="red.0" style={{ border: "1px solid #ef4444" }}>
+        <Card padding="lg" radius="md" bg="dark.7" style={{ border: "1px solid var(--mantine-color-alert-8)" }}>
           <Center py="xl">
             <Stack gap="md" align="center">
-              <ThemeIcon size="xl" variant="light" color="red">
+              <ThemeIcon size="xl" variant="light" color="alert">
                 <IconAlertTriangle size={32} stroke={1.5} />
               </ThemeIcon>
               <Text fw={600} size="lg">
@@ -59,7 +59,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
               </Text>
               {this.state.error && (
                 <Text size="sm" c="dimmed" style={{ maxWidth: "400px", textAlign: "center" }}>
-                  {this.state.error.message}
+                  {import.meta.env.PROD
+                    ? "An unexpected error occurred. Our team has been notified."
+                    : this.state.error.message}
                 </Text>
               )}
               <Text size="sm" c="dimmed" style={{ textAlign: "center" }}>
@@ -77,5 +79,3 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return this.props.children;
   }
 }
-
-ErrorBoundary.displayName = "ErrorBoundary";

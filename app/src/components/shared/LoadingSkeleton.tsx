@@ -1,8 +1,8 @@
-import { Skeleton, Card, Grid, Stack } from "@mantine/core";
+import { Skeleton, Card, Grid, Stack, SimpleGrid } from "@mantine/core";
 
 export function LoadingCard() {
   return (
-    <Card withBorder padding="md">
+    <Card padding="md" radius="md" bg="dark.7" style={{ border: "1px solid var(--mantine-color-dark-5)" }}>
       <Stack gap="sm">
         <Skeleton height={20} width="80%" />
         <Skeleton height={40} />
@@ -14,7 +14,7 @@ export function LoadingCard() {
 
 export function LoadingTable() {
   return (
-    <Card withBorder padding="md">
+    <Card padding="md" radius="md" bg="dark.7" style={{ border: "1px solid var(--mantine-color-dark-5)" }}>
       <Stack gap="sm">
         <Skeleton height={16} width="50%" />
         <Skeleton height={16} width="70%" />
@@ -26,38 +26,20 @@ export function LoadingTable() {
 
 export function LoadingStatsGrid() {
   return (
-    <Grid>
-      <Grid.Col span={{ base: 6, md: 3 }}>
-        <Card withBorder padding="lg">
+    <SimpleGrid cols={{ base: 2, md: 4 }}>
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i} padding="lg" radius="md" bg="dark.7" style={{ border: "1px solid var(--mantine-color-dark-5)" }}>
           <Skeleton height={12} width="60%" mb="md" />
           <Skeleton height={32} width="80%" />
         </Card>
-      </Grid.Col>
-      <Grid.Col span={{ base: 6, md: 3 }}>
-        <Card withBorder padding="lg">
-          <Skeleton height={12} width="60%" mb="md" />
-          <Skeleton height={32} width="80%" />
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={{ base: 6, md: 3 }}>
-        <Card withBorder padding="lg">
-          <Skeleton height={12} width="60%" mb="md" />
-          <Skeleton height={32} width="80%" />
-        </Card>
-      </Grid.Col>
-      <Grid.Col span={{ base: 6, md: 3 }}>
-        <Card withBorder padding="lg">
-          <Skeleton height={12} width="60%" mb="md" />
-          <Skeleton height={32} width="80%" />
-        </Card>
-      </Grid.Col>
-    </Grid>
+      ))}
+    </SimpleGrid>
   );
 }
 
 export function LoadingConsultationList() {
   return (
-    <Card withBorder padding="md">
+    <Card padding="md" radius="md" bg="dark.7" style={{ border: "1px solid var(--mantine-color-dark-5)" }}>
       <Skeleton height={20} width="50%" mb="md" />
       <Stack gap="xs">
         {[1, 2, 3, 4, 5].map((i) => (

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   Card,
   Text,
@@ -36,7 +36,6 @@ export function InputPanel({ consultationId }: Props) {
   const qc = useQueryClient();
   const [textInput, setTextInput] = useState("");
   const [uploads, setUploads] = useState<InputOut[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fileMutation = useMutation({
     mutationFn: (file: File) => consultationsApi.addFileInput(consultationId, file),
@@ -70,13 +69,6 @@ export function InputPanel({ consultationId }: Props) {
     },
   });
 
-  // Focus text area when component mounts
-  useEffect(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.focus();
-    }
-  }, []);
-
   return (
     <Card withBorder padding="md" h="100%" role="region" aria-label="Input file uploads and clinical notes">
       <Text fw={600} mb="sm">
@@ -88,7 +80,7 @@ export function InputPanel({ consultationId }: Props) {
           accept={ACCEPT_TYPES}
           loading={fileMutation.isPending}
           maxSize={MAX_FILE_SIZE}
-          error={fileMutation.isError ? "Invalid file format or size" : undefined}
+          aria-label="Upload images, audio, video or documents (max 50MB)"
         >
           <Group justify="center" gap="sm" py="md" style={{ pointerEvents: "none" }}>
             <Dropzone.Accept>
