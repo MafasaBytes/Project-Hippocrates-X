@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from PIL import Image
     from src.models.audio import AudioTranscriber
     from src.models.nlp import ClinicalNLP
-    from src.models.reasoning import ReasoningEngine
+    from src.models.reasoning import BaseReasoningEngine
     from src.models.vision import VisionEncoder
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class FusionOrchestrator:
         self._vision: VisionEncoder | None = None
         self._nlp: ClinicalNLP | None = None
         self._audio: AudioTranscriber | None = None
-        self._reasoning: ReasoningEngine | None = None
+        self._reasoning: BaseReasoningEngine | None = None
 
         self._last_used: dict[str, float] = {}
         self._lock = threading.Lock()
@@ -91,10 +91,10 @@ class FusionOrchestrator:
         return self._audio
 
     @property
-    def reasoning(self) -> ReasoningEngine:
+    def reasoning(self) -> BaseReasoningEngine:
         if self._reasoning is None:
-            from src.models.reasoning import ReasoningEngine
-            self._reasoning = ReasoningEngine()
+            from src.models.reasoning import create_reasoning_engine
+            self._reasoning = create_reasoning_engine()
         self._touch("reasoning")
         return self._reasoning
 

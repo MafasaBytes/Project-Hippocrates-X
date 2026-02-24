@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     quantize_4bit: bool = False
     upload_dir: Path = Path("data/uploads")
 
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o"
+    reasoning_backend: str = "openai"
+
     @property
     def sync_database_url(self) -> str:
         return self.database_url.replace("+asyncpg", "")

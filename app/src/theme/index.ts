@@ -79,10 +79,10 @@ const indigo: MantineColorsTuple = [
 ];
 
 export const theme = createTheme({
-  fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+  fontFamily: "DM Sans, system-ui, -apple-system, sans-serif",
   fontFamilyMonospace: "JetBrains Mono, monospace",
   headings: {
-    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+    fontFamily: "DM Sans, system-ui, -apple-system, sans-serif",
     fontWeight: "600",
     sizes: {
       h1: { fontSize: "1.625rem", lineHeight: "1.3" },

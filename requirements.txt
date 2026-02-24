@@ -11,6 +11,9 @@ psycopg2-binary
 alembic
 pgvector
 
+# OpenAI
+openai
+
 # ML / HuggingFace
 torch
 transformers
