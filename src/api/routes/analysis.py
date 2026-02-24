@@ -52,6 +52,7 @@ async def analyze_in_consultation(
     return await svc.run_analysis(
         db,
         consultation_id=consultation_id,
+        patient_id=consultation.patient_id,
         prompt=body.prompt,
         image_path=image_path,
         clinical_text=body.clinical_text,

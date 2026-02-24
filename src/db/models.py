@@ -39,6 +39,21 @@ class InputType(str, enum.Enum):
     AUDIO = "audio"
 
 
+class Gender(str, enum.Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+
+
+class RecordType(str, enum.Enum):
+    LAB_RESULT = "lab_result"
+    IMAGING = "imaging"
+    PRESCRIPTION = "prescription"
+    REFERRAL = "referral"
+    CLINICAL_NOTE = "clinical_note"
+    OTHER = "other"
+
+
 # Tables 
 
 
@@ -55,6 +70,10 @@ class Doctor(Base):
 
 class Patient(Base):
     __tablename__ = "patients"
+    __table_args__ = (
+        Index("ix_patients_city", "city"),
+        Index("ix_patients_province", "province"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -62,7 +81,26 @@ class Patient(Base):
     medical_record_number: Mapped[str | None] = mapped_column(String(100), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    gender: Mapped[str | None] = mapped_column(Enum(Gender, name="gender_enum"))
+    blood_type: Mapped[str | None] = mapped_column(String(10))
+
+    phone: Mapped[str | None] = mapped_column(String(50))
+    email: Mapped[str | None] = mapped_column(String(255))
+    emergency_contact_name: Mapped[str | None] = mapped_column(String(255))
+    emergency_contact_phone: Mapped[str | None] = mapped_column(String(50))
+
+    address_line: Mapped[str | None] = mapped_column(String(500))
+    city: Mapped[str | None] = mapped_column(String(100))
+    province: Mapped[str | None] = mapped_column(String(100))
+    country: Mapped[str | None] = mapped_column(String(100))
+    postal_code: Mapped[str | None] = mapped_column(String(20))
+
+    allergies: Mapped[dict | None] = mapped_column(JSONB)
+    chronic_conditions: Mapped[dict | None] = mapped_column(JSONB)
+    notes: Mapped[str | None] = mapped_column(Text)
+
     consultations: Mapped[list["Consultation"]] = relationship(back_populates="patient")
+    medical_records: Mapped[list["MedicalRecord"]] = relationship(back_populates="patient", cascade="all, delete-orphan")
 
 
 class Consultation(Base):
@@ -119,3 +157,21 @@ class AnalysisResult(Base):
 
     consultation: Mapped["Consultation"] = relationship(back_populates="analysis_results")
     input: Mapped["ConsultationInput | None"] = relationship(back_populates="analysis_results")
+
+
+class MedicalRecord(Base):
+    __tablename__ = "medical_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id"), nullable=False)
+    record_type: Mapped[RecordType] = mapped_column(Enum(RecordType, name="record_type_enum"), nullable=False)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    file_path: Mapped[str | None] = mapped_column(String(500))
+    raw_text: Mapped[str | None] = mapped_column(Text)
+    metadata_json: Mapped[dict | None] = mapped_column(JSONB)
+    record_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    embedding = mapped_column(Vector(768), nullable=True)
+
+    patient: Mapped["Patient"] = relationship(back_populates="medical_records")

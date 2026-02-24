@@ -1,4 +1,5 @@
-"""Consultation session lifecycle management.
+"""
+Consultation session lifecycle management.
 
 Handles starting sessions, adding inputs, running analysis,
 ending sessions with AI-generated summaries, and persisting everything to the DB.
@@ -79,6 +80,7 @@ class ConsultationService:
         session: AsyncSession,
         *,
         consultation_id: uuid.UUID,
+        patient_id: uuid.UUID | None = None,
         prompt: str,
         image_path: str | Path | None = None,
         clinical_text: str | None = None,
@@ -86,12 +88,19 @@ class ConsultationService:
         input_id: uuid.UUID | None = None,
     ) -> dict:
         """Run multi-modal analysis within a consultation context."""
+        patient_history = None
+        if patient_id:
+            patient_history = await repo.get_patient_history_summary(
+                session, patient_id
+            )
+
         result = await asyncio.to_thread(
             self._fusion.analyze,
             prompt,
             image_path=image_path,
             clinical_text=clinical_text,
             audio_path=audio_path,
+            patient_history=patient_history,
         )
 
         analysis = await repo.save_analysis(

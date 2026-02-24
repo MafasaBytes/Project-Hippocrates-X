@@ -192,16 +192,26 @@ class FusionOrchestrator:
         image_path: str | Path | None = None,
         clinical_text: str | None = None,
         audio_path: str | Path | None = None,
+        patient_history: dict | None = None,
         max_new_tokens: int = 1024,
         temperature: float = 0.3,
     ) -> dict:
         """Run multi-modal analysis and return the reasoning response.
 
         All input modalities are optional -- the system adapts to whatever is provided.
-        At minimum a prompt is required.
+        At minimum a prompt is required.  Pass ``patient_history`` (from
+        ``repositories.get_patient_history_summary``) to give the reasoning
+        engine longitudinal context about the patient.
         """
         context_sections: list[dict] = []
         used_nlp = False
+
+        # -- Patient history (injected first so the LLM sees it as context) --
+        if patient_history and patient_history.get("patient_name"):
+            context_sections.append({
+                "modality": "patient_history",
+                **patient_history,
+            })
 
         # -- Vision --
         if image is not None:

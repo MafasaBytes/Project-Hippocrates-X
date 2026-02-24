@@ -55,13 +55,37 @@ def _build_context_block(context_sections: list[dict]) -> str:
                 f"[TRANSCRIBED AUDIO]\n"
                 f"Transcript: {transcript}"
             )
+        elif modality == "patient_history":
+            history_lines = []
+            if section.get("patient_name"):
+                history_lines.append(f"Patient: {section['patient_name']}")
+            if section.get("date_of_birth"):
+                history_lines.append(f"DOB: {section['date_of_birth']}")
+            if section.get("gender"):
+                history_lines.append(f"Gender: {section['gender']}")
+            if section.get("blood_type"):
+                history_lines.append(f"Blood type: {section['blood_type']}")
+            if section.get("allergies"):
+                history_lines.append(f"Allergies: {', '.join(section['allergies'])}")
+            if section.get("chronic_conditions"):
+                history_lines.append(f"Chronic conditions: {', '.join(section['chronic_conditions'])}")
+            for cs in section.get("consultation_summaries", []):
+                history_lines.append(
+                    f"  [{cs.get('date', '?')}] {cs.get('type', '?')}: "
+                    f"{cs.get('summary', '')[:300]}"
+                )
+            for mr in section.get("medical_records", []):
+                history_lines.append(
+                    f"  [{mr.get('date', '?')}] {mr.get('type', '?')}: "
+                    f"{mr.get('title', '')} — {mr.get('description', '')[:200]}"
+                )
+            parts.append(
+                f"[PATIENT HISTORY]\n" + "\n".join(history_lines)
+            )
 
     return "\n\n".join(parts)
 
-
-# ---------------------------------------------------------------------------
 # Abstract base
-# ---------------------------------------------------------------------------
 
 class BaseReasoningEngine(ABC):
     @property
@@ -82,10 +106,7 @@ class BaseReasoningEngine(ABC):
         top_p: float = 0.9,
     ) -> dict: ...
 
-
-# ---------------------------------------------------------------------------
 # OpenAI cloud backend
-# ---------------------------------------------------------------------------
 
 class OpenAIReasoningEngine(BaseReasoningEngine):
     def __init__(self, model: str | None = None):
@@ -144,9 +165,7 @@ class OpenAIReasoningEngine(BaseReasoningEngine):
         }
 
 
-# ---------------------------------------------------------------------------
 # Local HuggingFace backend (original implementation)
-# ---------------------------------------------------------------------------
 
 class LocalReasoningEngine(BaseReasoningEngine):
     def __init__(self, model_name: str | None = None, device: str | None = None):
@@ -273,10 +292,8 @@ class LocalReasoningEngine(BaseReasoningEngine):
             "output_tokens": len(generated_ids),
         }
 
-
-# ---------------------------------------------------------------------------
 # Backward-compatible alias
-# ---------------------------------------------------------------------------
+
 ReasoningEngine = LocalReasoningEngine
 
 

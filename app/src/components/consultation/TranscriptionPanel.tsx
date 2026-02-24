@@ -86,7 +86,6 @@ export function TranscriptionPanel() {
               size="xs"
               leftSection={<IconMicrophone size={14} />}
               onClick={connect}
-              loading={status === "connecting"}
               aria-label="Start recording"
             >
               Record
