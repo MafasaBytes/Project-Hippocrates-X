@@ -72,7 +72,9 @@ export function PatientsPage() {
             <Table.Tr>
               <Table.Th>Name</Table.Th>
               <Table.Th>MRN</Table.Th>
+              <Table.Th>Gender</Table.Th>
               <Table.Th>Date of Birth</Table.Th>
+              <Table.Th>Location</Table.Th>
               <Table.Th>Registered</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -103,10 +105,20 @@ export function PatientsPage() {
                   </Text>
                 </Table.Td>
                 <Table.Td>
+                  <Text size="sm" tt="capitalize">
+                    {p.gender ?? "—"}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
                   <Text size="sm">
                     {p.date_of_birth
                       ? dayjs(p.date_of_birth).format("MMM D, YYYY")
                       : "—"}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm">
+                    {[p.city, p.province].filter(Boolean).join(", ") || "—"}
                   </Text>
                 </Table.Td>
                 <Table.Td>
