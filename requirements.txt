@@ -31,3 +31,9 @@ python-dotenv
 # Utilities
 numpy
 aiofiles
+
+# Testing
+pytest
+pytest-asyncio
+httpx
+aiosqlite

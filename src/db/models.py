@@ -54,6 +54,21 @@ class RecordType(str, enum.Enum):
     OTHER = "other"
 
 
+class FollowUpType(str, enum.Enum):
+    APPOINTMENT = "appointment"
+    LAB_CHECK = "lab_check"
+    MEDICATION_REVIEW = "medication_review"
+    SYMPTOM_CHECK = "symptom_check"
+    CUSTOM = "custom"
+
+
+class FollowUpStatus(str, enum.Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    OVERDUE = "overdue"
+    CANCELLED = "cancelled"
+
+
 # Tables 
 
 
@@ -175,3 +190,35 @@ class MedicalRecord(Base):
     embedding = mapped_column(Vector(768), nullable=True)
 
     patient: Mapped["Patient"] = relationship(back_populates="medical_records")
+
+
+class FollowUp(Base):
+    __tablename__ = "follow_ups"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    consultation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("consultations.id"), nullable=False)
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id"), nullable=False)
+    doctor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("doctors.id"), nullable=False)
+
+    follow_up_type: Mapped[FollowUpType] = mapped_column(
+        Enum(FollowUpType, name="follow_up_type_enum"), nullable=False
+    )
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    status: Mapped[FollowUpStatus] = mapped_column(
+        Enum(FollowUpStatus, name="follow_up_status_enum"),
+        default=FollowUpStatus.PENDING,
+    )
+
+    ai_generated: Mapped[bool] = mapped_column(default=False)
+    ai_reasoning: Mapped[str | None] = mapped_column(Text)
+
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    outcome_notes: Mapped[str | None] = mapped_column(Text)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    consultation: Mapped["Consultation"] = relationship()
+    patient: Mapped["Patient"] = relationship()
+    doctor: Mapped["Doctor"] = relationship()

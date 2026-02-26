@@ -10,6 +10,7 @@ import {
   RiskDistribution,
   ModelConfidenceSnapshot,
 } from "../components/dashboard/RiskDistribution";
+import { FollowUpPanel } from "../components/follow-up/FollowUpPanel";
 
 function DashboardSkeleton() {
   return (
@@ -102,6 +103,10 @@ export function DashboardPage() {
           <ModelConfidenceSnapshot />
         </Grid.Col>
       </Grid>
+
+      <Card withBorder padding="md" radius="md">
+        <FollowUpPanel showTitle limit={10} />
+      </Card>
     </Stack>
   );
 }

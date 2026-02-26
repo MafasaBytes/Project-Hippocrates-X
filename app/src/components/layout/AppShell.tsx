@@ -22,6 +22,8 @@ import {
   IconSearch,
   IconPlayerPlay,
   IconBrain,
+  IconChartBar,
+  IconCalendarDue,
 } from "@tabler/icons-react";
 import { BeginConsultationModal } from "../consultation/BeginConsultationModal";
 
@@ -43,6 +45,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: "Intelligence",
     items: [
+      { label: "Analytics", path: "/analytics", icon: IconChartBar },
+      { label: "Follow-Ups", path: "/follow-ups", icon: IconCalendarDue },
       { label: "Search", path: "/search", icon: IconSearch },
     ],
   },

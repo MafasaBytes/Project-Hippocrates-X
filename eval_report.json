@@ -1,0 +1,10 @@
+{
+  "nih": {
+    "dataset": "NIH ChestX-ray14",
+    "n": 0
+  },
+  "mimic": {
+    "dataset": "MIMIC-CXR",
+    "n": 0
+  }
+}

@@ -25,6 +25,8 @@ import {
   IconDroplet,
   IconAlertTriangle,
   IconHeart,
+  IconBrain,
+  IconCalendarDue,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
@@ -36,6 +38,8 @@ import { LoadingCard } from "../components/shared/LoadingSkeleton";
 import { PatientEditDrawer } from "../components/patient/PatientEditDrawer";
 import { PatientTimeline } from "../components/patient/PatientTimeline";
 import { MedicalRecordUpload } from "../components/patient/MedicalRecordUpload";
+import { PatientIntelligence } from "../components/patient/PatientIntelligence";
+import { FollowUpPanel } from "../components/follow-up/FollowUpPanel";
 import dayjs from "dayjs";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
@@ -263,6 +267,12 @@ export function PatientDetailPage() {
           <Tabs.Tab value="consultations" leftSection={<IconStethoscope size={16} />}>
             Consultations ({consultations.length})
           </Tabs.Tab>
+          <Tabs.Tab value="intelligence" leftSection={<IconBrain size={16} />}>
+            AI Intelligence
+          </Tabs.Tab>
+          <Tabs.Tab value="follow-ups" leftSection={<IconCalendarDue size={16} />}>
+            Follow-Ups
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="timeline" pt="md">
@@ -340,6 +350,14 @@ export function PatientDetailPage() {
               </Table.Tbody>
             </Table>
           </Card>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="intelligence" pt="md">
+          <PatientIntelligence patientId={patient.id} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="follow-ups" pt="md">
+          <FollowUpPanel patientId={patient.id} />
         </Tabs.Panel>
       </Tabs>
 

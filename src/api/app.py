@@ -22,7 +22,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from src.api.routes import analysis, consultations, doctors, medical_records, patients, search, transcription
+from src.api.routes import (
+    analysis,
+    analytics,
+    consultations,
+    doctors,
+    follow_ups,
+    medical_records,
+    patients,
+    patient_intelligence,
+    search,
+    transcription,
+)
 from src.config import settings
 
 logger = logging.getLogger(__name__)
@@ -110,6 +121,9 @@ def create_app() -> FastAPI:
     app.include_router(medical_records.router)
     app.include_router(consultations.router)
     app.include_router(analysis.router)
+    app.include_router(analytics.router)
+    app.include_router(patient_intelligence.router)
+    app.include_router(follow_ups.router)
     app.include_router(search.router)
     app.include_router(transcription.router)
 

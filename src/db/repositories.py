@@ -13,6 +13,9 @@ from .models import (
     ConsultationStatus,
     ConsultationType,
     Doctor,
+    FollowUp,
+    FollowUpStatus,
+    FollowUpType,
     InputType,
     MedicalRecord,
     Patient,
@@ -321,6 +324,30 @@ async def get_patient_timeline(
     return timeline[:limit]
 
 
+async def get_patient_analysis_details(
+    session: AsyncSession, patient_id: uuid.UUID, *, limit: int = 30
+) -> list[dict]:
+    """Retrieve detailed analysis results across all consultations for a patient."""
+    stmt = (
+        select(AnalysisResult)
+        .join(Consultation, AnalysisResult.consultation_id == Consultation.id)
+        .where(Consultation.patient_id == patient_id)
+        .order_by(AnalysisResult.created_at.desc())
+        .limit(limit)
+    )
+    result = await session.execute(stmt)
+    rows = list(result.scalars().all())
+    return [
+        {
+            "prompt": r.prompt,
+            "response": r.result.get("response", "") if isinstance(r.result, dict) else "",
+            "model": r.result.get("model", "") if isinstance(r.result, dict) else "",
+            "created_at": r.created_at.isoformat() if r.created_at else "",
+        }
+        for r in rows
+    ]
+
+
 async def get_patient_history_summary(
     session: AsyncSession, patient_id: uuid.UUID, *, max_consultations: int = 10
 ) -> dict:
@@ -372,3 +399,65 @@ async def get_patient_history_summary(
             for r in records
         ],
     }
+
+
+# Follow-Ups
+async def create_follow_up(session: AsyncSession, **fields) -> FollowUp:
+    follow_up = FollowUp(**fields)
+    session.add(follow_up)
+    await session.commit()
+    await session.refresh(follow_up)
+    return follow_up
+
+
+async def get_follow_up(session: AsyncSession, follow_up_id: uuid.UUID) -> FollowUp | None:
+    return await session.get(FollowUp, follow_up_id)
+
+
+async def list_follow_ups(
+    session: AsyncSession,
+    *,
+    doctor_id: uuid.UUID | None = None,
+    patient_id: uuid.UUID | None = None,
+    status: FollowUpStatus | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[FollowUp]:
+    stmt = select(FollowUp).order_by(FollowUp.due_date.asc()).limit(limit).offset(offset)
+    if doctor_id:
+        stmt = stmt.where(FollowUp.doctor_id == doctor_id)
+    if patient_id:
+        stmt = stmt.where(FollowUp.patient_id == patient_id)
+    if status:
+        stmt = stmt.where(FollowUp.status == status)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def update_follow_up(
+    session: AsyncSession, follow_up_id: uuid.UUID, **fields
+) -> FollowUp | None:
+    follow_up = await session.get(FollowUp, follow_up_id)
+    if follow_up is None:
+        return None
+    for key, value in fields.items():
+        setattr(follow_up, key, value)
+    await session.commit()
+    await session.refresh(follow_up)
+    return follow_up
+
+
+async def mark_overdue_follow_ups(session: AsyncSession) -> int:
+    """Mark all pending follow-ups past their due date as overdue. Returns count."""
+    now = datetime.now(timezone.utc)
+    stmt = (
+        select(FollowUp)
+        .where(FollowUp.status == FollowUpStatus.PENDING, FollowUp.due_date < now)
+    )
+    result = await session.execute(stmt)
+    overdue = list(result.scalars().all())
+    for fu in overdue:
+        fu.status = FollowUpStatus.OVERDUE
+    if overdue:
+        await session.commit()
+    return len(overdue)

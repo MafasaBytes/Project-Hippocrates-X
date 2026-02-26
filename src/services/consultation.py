@@ -135,6 +135,19 @@ class ConsultationService:
             summary = await self._generate_summary(consultation)
 
         updated = await repo.end_consultation(session, consultation_id, summary=summary)
+
+        # Generate AI follow-up recommendations in background
+        if consultation.analysis_results or summary:
+            try:
+                from src.services.follow_up import FollowUpService
+                follow_up_svc = FollowUpService(fusion=self._fusion)
+                await follow_up_svc.generate_follow_ups(session, consultation_id)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    "Follow-up generation failed for consultation %s", consultation_id
+                )
+
         return {
             "consultation_id": str(updated.id),
             "status": updated.status.value,

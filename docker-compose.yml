@@ -24,17 +24,28 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      # Override DB host to use the service name instead of localhost
       DATABASE_URL: postgresql+asyncpg://hippocrates:hippocrates_dev@db:5432/hippocrates
     ports:
       - "8000:8000"
     volumes:
       - uploads:/app/data/uploads
-      # Mount HuggingFace model cache so models survive container rebuilds
       - hf_cache:/root/.cache/huggingface
     depends_on:
       db:
         condition: service_healthy
+
+  # Smoke-test runner (only starts with `docker compose --profile test up smoke-test`)
+  smoke-test:
+    image: python:3.11-slim
+    container_name: hippocrates-smoke-test
+    profiles: ["test"]
+    volumes:
+      - ./scripts:/scripts:ro
+    depends_on:
+      backend:
+        condition: service_started
+    entrypoint: >
+      sh -c "sleep 10 && python /scripts/smoke_test.py http://backend:8000"
 
 volumes:
   pgdata:
