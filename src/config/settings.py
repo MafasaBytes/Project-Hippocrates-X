@@ -18,7 +18,12 @@ class Settings(BaseSettings):
     reasoning_model: str = "aaditya/Llama3-OpenBioLLM-8B"
 
     device: str = "auto"
+    quantize_4bit: bool = False
     upload_dir: Path = Path("data/uploads")
+
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o"
+    reasoning_backend: str = "openai"
 
     @property
     def sync_database_url(self) -> str:

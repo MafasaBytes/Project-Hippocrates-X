@@ -1,0 +1,70 @@
+{
+  "nih": {
+    "dataset": "NIH ChestX-ray14",
+    "n": 10,
+    "concordance": {
+      "mean": 1.0,
+      "median": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "stdev": 0.0,
+      "pass_rate": 1.0
+    },
+    "coverage": {
+      "mean": 0.975,
+      "median": 1.0,
+      "pass_rate": 1.0
+    },
+    "quality": {
+      "mean": 0.9,
+      "median": 1.0,
+      "hallucination_rate": 0.2
+    },
+    "latency": {
+      "mean_s": 15.0,
+      "median_s": 10.97,
+      "p95_s": 46.29,
+      "min_s": 8.67,
+      "max_s": 46.29
+    },
+    "multimodal": {
+      "better_rate": 0.7,
+      "avg_concordance_gain": 0.65
+    },
+    "overall_pass_rate": 1.0
+  },
+  "mimic": {
+    "dataset": "MIMIC-CXR",
+    "n": 10,
+    "concordance": {
+      "mean": 0.945,
+      "median": 1.0,
+      "min": 0.455,
+      "max": 1.0,
+      "stdev": 0.172,
+      "pass_rate": 0.9
+    },
+    "coverage": {
+      "mean": 1.0,
+      "median": 1.0,
+      "pass_rate": 1.0
+    },
+    "quality": {
+      "mean": 1.0,
+      "median": 1.0,
+      "hallucination_rate": 0.0
+    },
+    "latency": {
+      "mean_s": 14.04,
+      "median_s": 14.0,
+      "p95_s": 21.68,
+      "min_s": 9.76,
+      "max_s": 21.68
+    },
+    "multimodal": {
+      "better_rate": 0.6,
+      "avg_concordance_gain": 0.249
+    },
+    "overall_pass_rate": 1.0
+  }
+}

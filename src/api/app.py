@@ -2,6 +2,18 @@
 
 from __future__ import annotations
 
+# Disable the safetensors auto-conversion thread that crashes on repos with
+# discussions disabled (e.g. aaditya/Llama3-OpenBioLLM-8B → 403 Forbidden).
+# Must run before any transformers import.
+try:
+    import transformers.safetensors_conversion as _sc
+    _sc.auto_conversion = lambda *a, **kw: None  # type: ignore[attr-defined]
+except Exception:
+    pass
+
+import logging
+import threading
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -10,7 +22,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from src.api.routes import analysis, consultations, doctors, patients, search, transcription
+from src.api.routes import (
+    analysis,
+    analytics,
+    consultations,
+    doctors,
+    follow_ups,
+    medical_records,
+    patients,
+    patient_intelligence,
+    search,
+    transcription,
+)
 from src.config import settings
 
 # Absolute path to the compiled React app (present in Docker, absent in dev)
@@ -20,7 +43,16 @@ _FRONTEND_DIST = Path(__file__).resolve().parents[2] / "app" / "dist"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
+
+    warmup_thread = threading.Thread(target=_warmup_models, daemon=True)
+    warmup_thread.start()
+
+    cleanup_thread = threading.Thread(target=_idle_cleanup_loop, daemon=True)
+    cleanup_thread.start()
+
     yield
+
+    _cleanup_stop.set()
 
 
 def create_app() -> FastAPI:
@@ -53,8 +85,12 @@ def create_app() -> FastAPI:
 
     app.include_router(doctors.router)
     app.include_router(patients.router)
+    app.include_router(medical_records.router)
     app.include_router(consultations.router)
     app.include_router(analysis.router)
+    app.include_router(analytics.router)
+    app.include_router(patient_intelligence.router)
+    app.include_router(follow_ups.router)
     app.include_router(search.router)
     app.include_router(transcription.router)
 

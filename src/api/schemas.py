@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -29,6 +30,21 @@ class InputTypeEnum(str, Enum):
     audio = "audio"
 
 
+class GenderEnum(str, Enum):
+    male = "male"
+    female = "female"
+    other = "other"
+
+
+class RecordTypeEnum(str, Enum):
+    lab_result = "lab_result"
+    imaging = "imaging"
+    prescription = "prescription"
+    referral = "referral"
+    clinical_note = "clinical_note"
+    other = "other"
+
+
 # ── Doctor / Patient ──
 
 
@@ -50,6 +66,40 @@ class PatientCreate(BaseModel):
     name: str
     date_of_birth: datetime | None = None
     medical_record_number: str | None = None
+    gender: GenderEnum | None = None
+    blood_type: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    address_line: str | None = None
+    city: str | None = None
+    province: str | None = None
+    country: str | None = None
+    postal_code: str | None = None
+    allergies: list[str] | None = None
+    chronic_conditions: list[str] | None = None
+    notes: str | None = None
+
+
+class PatientUpdate(BaseModel):
+    name: str | None = None
+    date_of_birth: datetime | None = None
+    medical_record_number: str | None = None
+    gender: GenderEnum | None = None
+    blood_type: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    address_line: str | None = None
+    city: str | None = None
+    province: str | None = None
+    country: str | None = None
+    postal_code: str | None = None
+    allergies: list[str] | None = None
+    chronic_conditions: list[str] | None = None
+    notes: str | None = None
 
 
 class PatientOut(BaseModel):
@@ -58,8 +108,68 @@ class PatientOut(BaseModel):
     date_of_birth: datetime | None
     medical_record_number: str | None
     created_at: datetime
+    gender: str | None = None
+    blood_type: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    address_line: str | None = None
+    city: str | None = None
+    province: str | None = None
+    country: str | None = None
+    postal_code: str | None = None
+    allergies: list[str] | None = None
+    chronic_conditions: list[str] | None = None
+    notes: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+# ── Medical Records ──
+
+
+class MedicalRecordCreate(BaseModel):
+    record_type: RecordTypeEnum
+    title: str
+    description: str | None = None
+    raw_text: str | None = None
+    metadata_json: dict | None = None
+    record_date: datetime
+
+
+class MedicalRecordOut(BaseModel):
+    id: uuid.UUID
+    patient_id: uuid.UUID
+    record_type: str
+    title: str
+    description: str | None
+    file_path: str | None
+    raw_text: str | None
+    metadata_json: dict | None
+    record_date: datetime
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TimelineConsultationEntry(BaseModel):
+    entry_type: Literal["consultation"] = "consultation"
+    id: uuid.UUID
+    date: datetime
+    title: str
+    status: str
+    consultation_type: str
+    summary: str | None = None
+
+
+class TimelineMedicalRecordEntry(BaseModel):
+    entry_type: Literal["medical_record"] = "medical_record"
+    id: uuid.UUID
+    date: datetime
+    title: str
+    record_type: str
+    description: str | None = None
 
 
 # ── Consultation ──

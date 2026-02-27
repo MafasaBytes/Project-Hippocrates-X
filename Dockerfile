@@ -47,4 +47,4 @@ EXPOSE 8000
 # Run DB migrations then start the server.
 # In production override CMD or use an entrypoint script.
 CMD alembic upgrade head && \
-    uvicorn src.api.app:app --host 0.0.0.0 --port 8000
+    uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 2

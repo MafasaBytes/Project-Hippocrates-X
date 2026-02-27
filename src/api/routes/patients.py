@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_db
-from src.api.schemas import PatientCreate, PatientOut
+from src.api.schemas import PatientCreate, PatientOut, PatientUpdate
 from src.db import repositories as repo
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
@@ -31,12 +31,7 @@ async def create_patient(
     body: PatientCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    return await repo.create_patient(
-        db,
-        name=body.name,
-        date_of_birth=body.date_of_birth,
-        medical_record_number=body.medical_record_number,
-    )
+    return await repo.create_patient(db, **body.model_dump(exclude_none=True))
 
 
 @router.get("/{patient_id}", response_model=PatientOut)
@@ -45,6 +40,21 @@ async def get_patient(
     db: AsyncSession = Depends(get_db),
 ):
     patient = await repo.get_patient(db, patient_id)
+    if not patient:
+        raise HTTPException(404, "Patient not found")
+    return patient
+
+
+@router.patch("/{patient_id}", response_model=PatientOut)
+async def update_patient(
+    patient_id: uuid.UUID,
+    body: PatientUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        raise HTTPException(400, "No fields to update")
+    patient = await repo.update_patient(db, patient_id, **updates)
     if not patient:
         raise HTTPException(404, "Patient not found")
     return patient

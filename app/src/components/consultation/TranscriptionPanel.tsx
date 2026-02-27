@@ -6,50 +6,93 @@ import {
   Group,
   ScrollArea,
   Badge,
-  Transition,
+  Alert,
+  Loader,
 } from "@mantine/core";
 import {
   IconMicrophone,
-  IconPlayerPause,
+  IconPlayerStop,
   IconRefresh,
   IconAlertCircle,
+  IconTrash,
 } from "@tabler/icons-react";
 import { useTranscription } from "../../hooks/useTranscription";
 
+const STATUS_COLOR: Record<string, string> = {
+  idle: "gray",
+  connecting: "yellow",
+  recording: "green",
+  error: "red",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  idle: "Disconnected",
+  connecting: "Connecting…",
+  recording: "Recording",
+  error: "Error",
+};
+
 export function TranscriptionPanel() {
   const {
-    connected,
+    status,
     transcript,
+    error,
     connect,
     flush,
     finish,
     disconnect,
+    reset,
   } = useTranscription();
 
   return (
-    <Card withBorder padding="md" h="100%" role="region" aria-label="Live transcription panel">
+    <Card
+      withBorder
+      padding="md"
+      h="100%"
+      role="region"
+      aria-label="Live transcription panel"
+    >
       <Group justify="space-between" mb="sm">
         <Text fw={600}>Live Transcription</Text>
         <Badge
-          color={connected ? "green" : "gray"}
+          color={STATUS_COLOR[status]}
           variant="dot"
           size="sm"
-          aria-label={`Connection status: ${connected ? "Connected" : "Disconnected"}`}
+          aria-label={`Status: ${STATUS_LABEL[status]}`}
         >
-          {connected ? "Connected" : "Disconnected"}
+          {status === "recording" && (
+            <Loader color="green" size={10} type="dots" mr={4} />
+          )}
+          {STATUS_LABEL[status]}
         </Badge>
       </Group>
 
+      {error && (
+        <Alert
+          color="red"
+          icon={<IconAlertCircle size={16} />}
+          mb="sm"
+          withCloseButton
+          onClose={() => reset()}
+        >
+          {error}
+        </Alert>
+      )}
+
       <Stack gap="sm">
         <Group gap="xs">
-          {!connected ? (
+          {status === "idle" || status === "error" ? (
             <Button
               size="xs"
               leftSection={<IconMicrophone size={14} />}
               onClick={connect}
-              aria-label="Connect to transcription service"
+              aria-label="Start recording"
             >
-              Connect
+              Record
+            </Button>
+          ) : status === "connecting" ? (
+            <Button size="xs" loading disabled>
+              Connecting…
             </Button>
           ) : (
             <>
@@ -66,34 +109,46 @@ export function TranscriptionPanel() {
                 size="xs"
                 variant="light"
                 color="red"
-                leftSection={<IconPlayerPause size={14} />}
+                leftSection={<IconPlayerStop size={14} />}
                 onClick={() => {
                   finish();
                   disconnect();
                 }}
-                aria-label="Stop transcription"
+                aria-label="Stop recording"
               >
                 Stop
               </Button>
             </>
           )}
+
+          {transcript && status === "idle" && (
+            <Button
+              size="xs"
+              variant="subtle"
+              color="gray"
+              leftSection={<IconTrash size={14} />}
+              onClick={reset}
+              aria-label="Clear transcript"
+            >
+              Clear
+            </Button>
+          )}
         </Group>
 
         <ScrollArea h={320} type="always">
-          <div aria-live="polite" aria-atomic="true">
+          <div aria-live="polite" aria-atomic="false">
             {transcript ? (
-              <Text size="sm" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+              <Text
+                size="sm"
+                style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}
+              >
                 {transcript}
               </Text>
             ) : (
               <Text size="sm" c="dimmed" ta="center" py="xl">
-                {connected ? (
-                  <span>
-                    <IconAlertCircle size={16} /> Listening... Send audio data to begin transcription.
-                  </span>
-                ) : (
-                  "Click Connect to start live transcription."
-                )}
+                {status === "recording"
+                  ? "Listening — speak into your microphone…"
+                  : "Click Record to start live transcription."}
               </Text>
             )}
           </div>

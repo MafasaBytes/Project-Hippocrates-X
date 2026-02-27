@@ -1,4 +1,5 @@
-"""Consultation session lifecycle management.
+"""
+Consultation session lifecycle management.
 
 Handles starting sessions, adding inputs, running analysis,
 ending sessions with AI-generated summaries, and persisting everything to the DB.
@@ -6,6 +7,7 @@ ending sessions with AI-generated summaries, and persisting everything to the DB
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from pathlib import Path
 
@@ -19,6 +21,12 @@ from src.services.fusion import FusionOrchestrator
 class ConsultationService:
     def __init__(self, fusion: FusionOrchestrator):
         self._fusion = fusion
+
+    # Maps consultation type -> modalities likely needed.
+    _HINT_MAP: dict[ConsultationType, list[str]] = {
+        ConsultationType.FACE_TO_FACE: ["nlp", "reasoning", "vision"],
+        ConsultationType.PHONE_CALL: ["nlp", "reasoning", "audio"],
+    }
 
     async def start(
         self,
@@ -34,6 +42,10 @@ class ConsultationService:
             patient_id=patient_id,
             consultation_type=consultation_type,
         )
+
+        hints = self._HINT_MAP.get(consultation_type, ["nlp", "reasoning"])
+        self._fusion.hint(hints)
+
         return {
             "consultation_id": str(consultation.id),
             "status": consultation.status.value,
@@ -68,6 +80,7 @@ class ConsultationService:
         session: AsyncSession,
         *,
         consultation_id: uuid.UUID,
+        patient_id: uuid.UUID | None = None,
         prompt: str,
         image_path: str | Path | None = None,
         clinical_text: str | None = None,
@@ -75,11 +88,19 @@ class ConsultationService:
         input_id: uuid.UUID | None = None,
     ) -> dict:
         """Run multi-modal analysis within a consultation context."""
-        result = self._fusion.analyze(
+        patient_history = None
+        if patient_id:
+            patient_history = await repo.get_patient_history_summary(
+                session, patient_id
+            )
+
+        result = await asyncio.to_thread(
+            self._fusion.analyze,
             prompt,
             image_path=image_path,
             clinical_text=clinical_text,
             audio_path=audio_path,
+            patient_history=patient_history,
         )
 
         analysis = await repo.save_analysis(
@@ -111,9 +132,22 @@ class ConsultationService:
 
         summary = None
         if generate_summary and consultation.analysis_results:
-            summary = self._generate_summary(consultation)
+            summary = await self._generate_summary(consultation)
 
         updated = await repo.end_consultation(session, consultation_id, summary=summary)
+
+        # Generate AI follow-up recommendations in background
+        if consultation.analysis_results or summary:
+            try:
+                from src.services.follow_up import FollowUpService
+                follow_up_svc = FollowUpService(fusion=self._fusion)
+                await follow_up_svc.generate_follow_ups(session, consultation_id)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    "Follow-up generation failed for consultation %s", consultation_id
+                )
+
         return {
             "consultation_id": str(updated.id),
             "status": updated.status.value,
@@ -121,7 +155,7 @@ class ConsultationService:
             "summary": updated.summary,
         }
 
-    def _generate_summary(self, consultation) -> str:
+    async def _generate_summary(self, consultation) -> str:
         """Build a post-session summary from all analysis results."""
         all_responses = []
         for ar in consultation.analysis_results:
@@ -138,5 +172,10 @@ class ConsultationService:
             "clinical summary suitable for medical records:\n\n" + combined
         )
 
-        result = self._fusion.reasoning.generate(summary_prompt, max_new_tokens=512, temperature=0.2)
+        result = await asyncio.to_thread(
+            self._fusion.reasoning.generate,
+            summary_prompt,
+            max_new_tokens=512,
+            temperature=0.2,
+        )
         return result["response"]

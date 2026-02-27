@@ -3,6 +3,11 @@ data/metadata/*
 data/processed/*
 data/raw/*
 data/uploads/*
+data/demo/*
+data/mtsamples/*
+data/aci-bench/*
+data/iu-xray/*
+data/nih-cxr/*
 
 # Environment settings
 *.env
@@ -30,3 +35,9 @@ alembic/versions/__pycache__/
 docs/*
 docs/.DS_Store
 docs/
+
+# Test files
+tests/
+
+# Scripts
+scripts/
