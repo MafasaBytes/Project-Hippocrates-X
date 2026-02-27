@@ -21,6 +21,7 @@ accelerate
 safetensors
 bitsandbytes
 Pillow
+opencv-python-headless
 soundfile
 librosa
 
