@@ -41,3 +41,6 @@ tests/
 
 # Scripts
 scripts/
+
+# JSON files
+fix-author.sh
